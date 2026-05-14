@@ -58,22 +58,38 @@ Use the email-search MCP to find candidate invoice emails. See [references/invoi
 - Filter OUT emails where the user is the **sender** (those are outbound invoices to their own customers).
 - Filter OUT clearly non-SaaS receipts (Amazon shopping, ride-share, restaurants, hardware).
 
-### Step 4 — Extract structured data from each candidate
+### Step 4 — Classify, then extract structured data
 
-For each candidate invoice, read the body and extract:
+#### First — classify the invoice type
+
+Not every invoice reflects the standard subscription cost. Two shapes show up:
+
+- **Full / renewal invoice** — the standard charge for the whole billing period (monthly, quarterly, annual). Source of truth for per-unit cost, billing frequency, and total seats.
+- **Incremental / prorated invoice** — a mid-period adjustment for seat additions, plan upgrades, downgrades, or vendor-side price changes. The amount is partial; computing per-unit cost from it produces wrong values.
+
+**Incremental tells** (any of these):
+- Subject or body mentions "prorated", "pro-rated", "seat update", "plan change", "adjustment", "true-up", "for the remainder of", "credit memo", "mid-cycle"
+- Amount is much smaller than the vendor's typical invoice in the search window
+- Service period is shorter than the billing cycle (e.g. "Mar 15 – Mar 31" inside a monthly subscription)
+- The invoice falls inside a billing period that already had a renewal invoice from the same vendor
+
+For **full invoices**, every field below is fair game. For **incrementals**, treat them as confirming evidence — **skip per-unit cost and billing frequency** (the math is unreliable), but contract end date, plan/tier, and "new total seats after the change" are still usable. Incrementals are often the *best* source for "they upgraded to Business plan on date X" or "renewal date is now 2027-03-15". See [references/invoice-detection.md](references/invoice-detection.md) for the full reliability matrix and the multi-invoice combining rules (e.g. when both a full invoice and incrementals exist for the same vendor in the search window).
+
+#### Then — extract these fields from each candidate
 
 - **Vendor** — the SaaS company billing for the service (From-address domain or body header).
+- **Invoice type** — `full` or `incremental` (per the classification above).
 - **Invoice date** — when the invoice was issued.
 - **Service period** — what the charge covers (e.g. "Jan 1 – Jan 31, 2026").
-- **Per-unit cost** — per-user or per-seat cost, as a decimal string (e.g. `"5.00"`).
-- **Cost structure** — `user` (per-seat), `flat` (fixed), or `tiered`.
+- **Per-unit cost** — per-user or per-seat cost, as a decimal string (e.g. `"5.00"`). **Full invoices only** — skip on incrementals.
+- **Cost structure** — `user` (per-seat), `flat` (fixed), or `tiered`. Skip if ambiguous on an incremental.
 - **Currency** — ISO 4217 code (USD, EUR, etc.).
-- **Billing frequency** — `month`, `quarter`, or `year`, inferred from the service period.
-- **Total amount + seats** — useful for cross-checking per-unit cost.
-- **Contract renewal/end date** — if mentioned ("renews on…", "auto-renews", "contract through…").
-- **Plan/tier** — the plan name on the invoice ("Pro", "Business", "Enterprise").
+- **Billing frequency** — `month`, `quarter`, or `year`, inferred from the service period. **Full invoices only** — the service period on an incremental is partial.
+- **Total seats after the change** — useful for both types when stated ("Your subscription now includes 50 seats").
+- **Contract renewal/end date** — if mentioned ("renews on…", "auto-renews", "contract through…"). Incrementals often confirm or update this.
+- **Plan/tier** — the plan name on the invoice ("Pro", "Business", "Enterprise"). If a recent incremental announces a plan change, trust it over an older full invoice.
 
-If a candidate's vendor is unclear, has no extractable cost, or otherwise doesn't yield enough structured data, mark it **uncertain** and exclude it from the proposal. Surface it to the user separately: "I saw this invoice but couldn't extract enough to propose an update."
+If a candidate has an unclear vendor, no reliable extractable data, or is only an incremental for a vendor with no full invoice in the window, mark it **uncertain** and exclude that vendor's cost fields from the proposal. Surface it to the user separately: "I only found mid-period adjustment invoices for <vendor> — I can update the plan tier and contract date, but the per-user cost is too noisy to propose."
 
 ### Step 5 — Match invoices to ShiftControl apps
 
