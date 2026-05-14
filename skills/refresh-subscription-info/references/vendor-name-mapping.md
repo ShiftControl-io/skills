@@ -52,13 +52,42 @@ If the invoice's From-address domain matches a known vendor, accept that match e
 
 Build a domain → product mapping as you go: when you successfully match a vendor by name, remember its domain for the rest of the session.
 
-**Acquired-product domain rebinds** — the From-domain doesn't always match the product because the parent company took over billing post-acquisition. Body content (subject, line items, "Pay <X>" references) is authoritative when the From-domain is the parent's:
+**Acquired-product domain rebinds** — the From-domain doesn't always match the product because the parent company sometimes takes over billing post-acquisition. The pattern varies per acquisition and per account:
 
-- `noreply@salesforce.com` / `slackinvoices@salesforce.com` with "Slack" in body → match the user's Slack app
-- `noreply@salesforce.com` with "Heroku" in body → match the user's Heroku app (if tracked)
-- Future Adobe-Figma billing — same pattern once that closes
+- Some vendors keep their original billing domain post-acquisition (e.g. Slack frequently continues to bill from `feedback@slack.com` even after the Salesforce acquisition).
+- Others migrate to the parent (e.g. some Heroku accounts now bill from `noreply@salesforce.com`).
+- A few vendors split — some account types stay on the original domain while enterprise accounts move to the parent's billing.
 
-Annotate these in the audit note as `(billed via Salesforce)` / `(billed via Adobe)` so the next reader understands the From-address.
+**Don't assume the rebind has happened**; read the body for the product name. If you DO see a clear rebind (the From-domain is one vendor and the body talks about a different product), match to the product named in the body and annotate the note with `(billed via <ParentCompany>)` so the next reader understands the From-address.
+
+### Observed vendor → email-sender patterns
+
+A non-exhaustive catalog of patterns observed in real ShiftControl inboxes. The skill should recognize these but not be limited to them.
+
+| Product | Typical From | Subject pattern | Format |
+|---|---|---|---|
+| Slack | `feedback@slack.com` | "<Org>, your plan has renewed", "<Org>, you're all set" | Inline body + "View Receipt" link |
+| Notion | `team@mail.notion.so`, vendor-templated | "Updates to your Notion invoice" (incremental), "Notion reminder: You will be charged in N days" (pre-renewal) | Inline body |
+| GitHub | `noreply@github.com` | "GitHub Invoice <INV-ID> - <Org>" | PDF attached |
+| Granola | `notifications@mail.granola.ai` (and Stripe template) | "Your receipt from Granola #<NUMBER>" | Stripe-template inline |
+| Framer | (Stripe-template sender) | "Your receipt from Framer B.V. #<NUMBER>" | Stripe-template inline |
+| Anthropic | `invoice+statements@mail.anthropic.com` | "Your receipt from Anthropic, PBC #<NUMBER>" | Stripe-template inline |
+| 1Password | (varies) | "Your 1Password invoice (<Org>)" | Inline body |
+| JumpCloud | (varies; often forwarded by an internal alias) | "Invoice <NUMBER> from JumpCloud" | PDF attached |
+| Cloudflare | (varies) | "Your invoice is attached" OR "Your Cloudflare purchase confirmation" | PDF or "View invoice" link |
+| Zoom | (varies) | "Payment Processed for <NUMBER>" | PDF attached |
+| AWS | `invoicing@aws.com`, `aws-globalreceivables@email.amazon.com` | "Amazon Web Services Billing Statement", "AWS Marketplace Statement" | PDF |
+
+### Stripe-template receipts are a recognizable shape
+
+Several vendors (Granola, Framer, Anthropic, others) use Stripe's billing platform, which produces a recognizable email template:
+
+- Subject: `"Your receipt from <Vendor> #<NUMBER>"`
+- Body opens with the vendor name and an invoice/receipt number
+- A "View receipt" or "Download invoice" link is usually present
+- Charge amount and period are inline
+
+When you see this template, the vendor in the subject IS the vendor you're matching — the From-address may be the vendor's own domain or a Stripe relay.
 
 ### 4a. Reseller line-item matching
 

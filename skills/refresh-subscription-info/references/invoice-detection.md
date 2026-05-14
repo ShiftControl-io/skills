@@ -139,6 +139,41 @@ When the invoice is from a reseller, the skill:
 
 If a reseller invoice has line items that don't match any ShiftControl app, treat each unmatched line the same way an unmatched standalone invoice would be — surface to the user as "found a Adobe Creative Cloud line on the ShiftControl invoice, but you don't track Adobe in ShiftControl yet."
 
+## Dedicated invoice mailboxes and forwarding
+
+Many organizations route SaaS invoices to a dedicated alias like `invoices@<company>.io` either via mail-server forwarding rules (vendor mail arrives directly at the alias) or via user-level forwarding (a person forwards each invoice manually from their personal inbox).
+
+When the email-search MCP is reading the dedicated mailbox, the sender field will frequently show **the alias itself** (e.g. `invoices@shiftcontrol.io`) rather than the original vendor's address — because the email arrived via a forwarding rule. The original vendor is in the **body**:
+
+- Subject line of the forwarded email
+- "From: <original sender>" line near the top of the body
+- Stripe-template "Your receipt from <Vendor>" pattern
+- Vendor logo / product name in the body header
+
+**Read the body to identify the vendor whenever the From-address is the user's own organization alias.** Don't skip these — they're often the bulk of the useful invoices.
+
+A practical heuristic: if the From-domain matches the user's company domain (the same domain ShiftControl runs on for that user's account), treat the email as forwarded and rely on the body for vendor identification.
+
+## False positives — outbound and unrelated emails
+
+The dedicated invoice mailbox typically collects more than just SaaS subscription invoices. Filter these OUT:
+
+- **Outbound payments / referrals received** — emails where the user's organization is RECEIVING money rather than paying. Common phrases: `"<Vendor>, Inc. has sent you a <amount> payment"`, `"You received a payment of <amount>"`, `"Coupa Pay has remitted <amount> to your account"`. Workato's referral payments to ShiftControl partners are a textbook example. These look structurally like invoices but represent the OPPOSITE direction of money.
+- **Customer payments to YOU** — emails from your own billing system (Stripe, Sequence HQ, etc.) confirming that one of YOUR customers paid YOU. Detect by: the From-domain belongs to the user's billing platform AND the body references *receiving* a payment from a customer.
+- **Professional services** — accountant fees, lawyer invoices, contractor / freelancer invoices. These are real money out the door but are NOT SaaS subscriptions. Detect by: vendor doesn't appear in any tracked-app list and the body describes services rather than software access.
+- **One-time purchases** — SSL certificates, domain registrations, hardware, marketing services. No recurring subscription relationship.
+- **Telecom and utilities** — SIM cards, internet, electricity, office costs.
+- **Bank, tax, regulatory** — bank statements, tax filings, government billings.
+
+These all share a recognizable pattern: vendor doesn't match any tracked ShiftControl app, OR the email describes a one-off transaction rather than a subscription. When in doubt, surface in the "found but not tracked" section of the proposal rather than guessing.
+
+## Reseller invoices observed in practice
+
+In addition to the major resellers (CDW, Insight, Carahsoft, Crayon, SoftwareOne) listed earlier, real ShiftControl-customer inboxes commonly include:
+
+- **Ingram Micro Asia Marketplace** (`Imcloudservicedesk.hk@cloud.im`) — sells Acronis and other cloud services. Subjects: `"Invoice 2026SIHK00<NUMBER>"`, `"Credit Memo 2026CNHK<NUMBER>"`, `"Payment 2026PRHK<NUMBER> has been received"`. Watch for `"Credit Memo"` — those reduce a balance and shouldn't be parsed as a new charge.
+- **AWS Marketplace** (`invoicing@aws.com`) — third-party SaaS subscriptions billed through AWS. Subject contains `"AWS Marketplace Statement"` or `"AWS Marketplace Billing Statement"`. Line items name the underlying SaaS product.
+
 ## Other failure modes worth flagging
 
 - **Currency conversion** — invoice in USD but user's org defaults to EUR/SGD. Surface the invoice currency; don't auto-convert. Let the user decide whether to store in invoice currency or org default.
