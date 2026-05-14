@@ -2,7 +2,7 @@
 
 ShiftControl uses the [Model Context Protocol (MCP)](https://modelcontextprotocol.io) — an open standard for connecting AI assistants to applications. To use any of the skills in this repo, you first install the **ShiftControl MCP server**, then install the skill(s) in whichever way your AI tool supports.
 
-You'll authenticate to ShiftControl once via PropelAuth (single sign-on, the same login you use for ShiftControl itself). The MCP server uses your account's permissions — anything you can do in ShiftControl, the AI can do on your behalf via this skill.
+You'll sign in to ShiftControl once in your browser — the same login you use for ShiftControl itself. After that, your AI assistant works with your actual ShiftControl data using your existing permissions; it can't do anything you can't already do yourself.
 
 ---
 
@@ -29,7 +29,19 @@ Add the `shiftcontrol` server inside `mcpServers`:
 }
 ```
 
-Restart Claude Desktop. The first time you use a ShiftControl tool, a browser tab opens for PropelAuth login. Approve once.
+Restart Claude Desktop. The first time you use a ShiftControl tool, a browser tab opens for ShiftControl sign-in. Approve once.
+
+### Claude.ai (web + mobile)
+
+In Claude on the web ([claude.ai](https://claude.ai)) or in the Claude mobile app:
+
+1. Open **Customize → Connectors**
+2. Click the **+ Add** button and select **Add custom connector**
+3. Name: `shiftcontrol`
+4. Remote MCP Server URL: `https://mcp.shiftcontrol.io/mcp`
+5. Click **Add**
+
+A browser tab opens for ShiftControl sign-in on first use. Approve once.
 
 ### Claude Code
 

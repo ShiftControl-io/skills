@@ -47,7 +47,7 @@ This is your authoritative "what's currently recorded" baseline.
 
 ### Step 2 — Define the search window
 
-By default, search the user's email for invoices received in the last **90 days**. If the user asks for a wider or narrower window, honor it.
+By default, search the user's email for invoices received in the last **18 months**. Annual contracts are common in SaaS, and a one-year window risks missing the most recent renewal invoice for any app that bills annually — 18 months gives you the current annual invoice plus a buffer to confirm you have the latest one. If the user asks for a narrower window ("just the last quarter", "this month only"), honor it.
 
 ### Step 3 — Search the email inbox
 
@@ -56,24 +56,47 @@ Use the email-search MCP to find candidate invoice emails. See [references/invoi
 - Subject contains one of: `invoice`, `receipt`, `billing`, `subscription`, `renewal`, `payment confirmation`, `order confirmation`.
 - From-address matches `billing@*`, `invoices@*`, `no-reply@*`, `accounts@*`, `finance@*`, `payments@*`, OR is a known SaaS vendor domain.
 - Filter OUT emails where the user is the **sender** (those are outbound invoices to their own customers).
-- Filter OUT clearly non-SaaS receipts (Amazon shopping, ride-share, restaurants, hardware).
+- Filter OUT **inbound-payments-received** — emails saying things like *"<Vendor>, Inc. has sent you a payment"* or *"Coupa Pay has remitted X to your account"*. These represent money coming TO the user (referrals, vendor-side payments) and are not SaaS invoices.
+- Filter OUT clearly non-SaaS receipts (Amazon shopping, ride-share, restaurants, hardware, SSL certs, professional services, contractor invoices, telecom bills).
 
-### Step 4 — Extract structured data from each candidate
+**Shared billing inboxes:** most organizations set up a shared `invoices@<their-company>.io`, `billing@<their-company>.io`, or `finance@<their-company>.io` address (a Google Group or distribution list) as the billing contact on every SaaS account. Invoices arrive at the *receiver* side at that address — the vendor is still the actual From-address. A search like `to:invoices@<their-company>.io newer_than:18m` is the highest-precision starting point. Ask the user which shared inbox they use if you're unsure; if there isn't one, fall back to searching the personal inbox.
 
-For each candidate invoice, read the body and extract:
+### Step 4 — Classify, then extract structured data
+
+#### First — classify the invoice type
+
+Not every invoice reflects the standard subscription cost. Two shapes show up:
+
+- **Full / renewal invoice** — the standard charge for the whole billing period (monthly, quarterly, annual). Source of truth for per-unit cost, billing frequency, and total seats.
+- **Incremental / prorated invoice** — a mid-period adjustment for seat additions, plan upgrades, downgrades, or vendor-side price changes. The amount is partial; computing per-unit cost from it produces wrong values.
+
+**Incremental tells** (any of these):
+- Subject or body mentions "prorated", "pro-rated", "seat update", "plan change", "adjustment", "true-up", "for the remainder of", "credit memo", "mid-cycle"
+- Amount is much smaller than the vendor's typical invoice in the search window
+- Service period is shorter than the billing cycle (e.g. "Mar 15 – Mar 31" inside a monthly subscription)
+- The invoice falls inside a billing period that already had a renewal invoice from the same vendor
+
+For **full invoices**, every field below is fair game. For **incrementals**, treat them as confirming evidence — **skip per-unit cost and billing frequency** (the math is unreliable), but contract end date, plan/tier, and "new total seats after the change" are still usable. Incrementals are often the *best* source for "they upgraded to Business plan on date X" or "renewal date is now 2027-03-15". See [references/invoice-detection.md](references/invoice-detection.md) for the full reliability matrix and the multi-invoice combining rules (e.g. when both a full invoice and incrementals exist for the same vendor in the search window).
+
+#### Then — extract these fields from each candidate
 
 - **Vendor** — the SaaS company billing for the service (From-address domain or body header).
+- **Invoice type** — `full` or `incremental` (per the classification above).
 - **Invoice date** — when the invoice was issued.
 - **Service period** — what the charge covers (e.g. "Jan 1 – Jan 31, 2026").
-- **Per-unit cost** — per-user or per-seat cost, as a decimal string (e.g. `"5.00"`).
-- **Cost structure** — `user` (per-seat), `flat` (fixed), or `tiered`.
+- **Per-unit cost** — per-user or per-seat cost, as a decimal string (e.g. `"5.00"`). **Full invoices only** — skip on incrementals.
+- **Cost structure** — `user` (per-seat), `flat` (fixed), or `tiered`. Skip if ambiguous on an incremental.
 - **Currency** — ISO 4217 code (USD, EUR, etc.).
-- **Billing frequency** — `month`, `quarter`, or `year`, inferred from the service period.
-- **Total amount + seats** — useful for cross-checking per-unit cost.
-- **Contract renewal/end date** — if mentioned ("renews on…", "auto-renews", "contract through…").
-- **Plan/tier** — the plan name on the invoice ("Pro", "Business", "Enterprise").
+- **Billing frequency** — `month`, `quarter`, or `year`, inferred from the service period. **Full invoices only** — the service period on an incremental is partial.
+- **Total seats after the change** — useful for both types when stated ("Your subscription now includes 50 seats").
+- **Contract renewal/end date** — if mentioned ("renews on…", "auto-renews", "contract through…"). Incrementals often confirm or update this.
+- **Plan/tier** — the plan name on the invoice ("Pro", "Business", "Enterprise"). If a recent incremental announces a plan change, trust it over an older full invoice.
 
-If a candidate's vendor is unclear, has no extractable cost, or otherwise doesn't yield enough structured data, mark it **uncertain** and exclude it from the proposal. Surface it to the user separately: "I saw this invoice but couldn't extract enough to propose an update."
+**PDF attachments:** if the email body says "Your invoice is attached" but lacks the cost details, the data is in the PDF. Most email MCPs return attachment contents — fetch and parse the PDF the same way as an inline-bodied invoice. If your email MCP can't return attachments, mark the invoice uncertain.
+
+**Web-hosted invoices:** if the invoice details are behind a "Click here to view your invoice" link rather than in the body or an attachment, **ask the user** before following the link: *"I found invoices from <vendor> where the details are behind a 'view invoice' link — should I follow those links to extract the cost details?"* If the user agrees AND your assistant can fetch URLs, fetch and parse. Otherwise mark uncertain.
+
+If a candidate has an unclear vendor, no reliable extractable data, or is only an incremental for a vendor with no full invoice in the window, mark it **uncertain** and exclude that vendor's cost fields from the proposal. Surface it to the user separately: "I only found mid-period adjustment invoices for <vendor> — I can update the plan tier and contract date, but the per-user cost is too noisy to propose."
 
 ### Step 5 — Match invoices to ShiftControl apps
 
@@ -101,15 +124,15 @@ Found invoices for 10 of your 23 ShiftControl apps. Proposed updates:
    cost:               $8.00/user/month  →  $7.00/user/month
    billingFrequency:   month             →  year
    contractEndDate:    (not set)         →  2027-03-15
-   note will be added: "Updated from Slack invoice dated 2026-03-15 via refresh-subscription-info v0.1.0"
+   notes update:       "Updated from Slack invoice dated 2026-03-15 (billed via Salesforce)"
 
 2. Notion
    cost:               $12.00/user/month →  $10.00/user/month
-   note will be added: "Updated from Notion invoice dated 2026-03-08 via refresh-subscription-info v0.1.0"
+   notes update:       "Updated from Notion invoice dated 2026-03-08"
 
 [... more ...]
 
-Apps with no invoice in the last 90 days (13): [list]
+Apps with no invoice in the last 18 months (13): [list]
 Invoices found for apps not in ShiftControl (2): [list of vendor names]
 
 Reply "approve N" (e.g. "approve 1, 3, 5") to apply specific changes,
@@ -148,7 +171,7 @@ For each approved (app, changes) pair, call `update_app_subscription` with:
 - `appId`: the UUID from Step 1.
 - `confirm: true` — set this only because you just obtained the user's explicit approval.
 - **Only the fields that actually changed** (omit unchanged ones — they keep their current value on the backend).
-- `notes`: append a line in the form `"Updated from <Vendor> invoice dated <YYYY-MM-DD> via refresh-subscription-info v0.1.0"` — read the current notes from Step 1's snapshot and append, don't overwrite.
+- `notes`: write a single line in the form `"Updated from <Vendor> invoice dated <YYYY-MM-DD>"`. If the invoice came via a reseller (e.g. Slack billed by Salesforce, Google Workspace billed by ShiftControl, JumpCloud billed by a partner), append `(billed via <Reseller>)` — e.g. `"Updated from Slack invoice dated 2026-03-15 (billed via Salesforce)"`. **Replace** any previous skill-written line of the same form (this skill runs repeatedly; we don't want notes to accumulate one line per run). Match for replacement using the pattern: line begins with `Updated from ` and contains `invoice dated <YYYY-MM-DD>`. **Preserve every other line** the user (or any other source) put in the notes field — only the skill's own previous "Updated from..." line gets replaced. If no such previous line exists, add the new one at the end.
 
 Process each app **sequentially** (not parallel) so errors are clearly attributable. After all writes, report back:
 
@@ -159,7 +182,7 @@ Applied 8 of 8 approved changes:
 ✓ Figma — updated
 [...]
 
-You can review the full audit log in ShiftControl → Apps → <app> → History.
+You can review the full change history in ShiftControl → Apps → <app> → History.
 ```
 
 If any write fails, report which one and why, but keep going with the rest. **Don't roll back successful writes** — incremental progress is more valuable than atomicity here.
@@ -169,7 +192,8 @@ If any write fails, report which one and why, but keep going with the rest. **Do
 - ❌ Calling `update_app_subscription` with `confirm: true` because "the user is asking for updates". They're asking for a **proposal**, not blanket approval. Always present the diff first.
 - ❌ Constructing an `appId` from a name. The UUID must come from `list_apps`.
 - ❌ Inferring `costStructure` when the invoice is ambiguous. If you can't tell whether it's per-seat or flat, leave that field out of the proposal and let the user decide.
-- ❌ Overwriting `notes` instead of appending. Read current notes; append the audit line.
+- ❌ Wiping out user-written notes. The skill replaces ONLY its own previous line (matching `Updated from <X> invoice dated <date>...`). Any other content in the notes — vendor contact, negotiation history, owner email, manual annotations — must be preserved.
+- ❌ Accumulating one new note line every time the skill runs. The skill is designed to be re-run regularly; replace the prior skill line, don't pile on.
 - ❌ Proposing changes for apps where no invoice was found, based on "you probably renewed at the same rate". This skill is **invoice-driven**: no invoice → no change.
 - ❌ Creating new apps. If an invoice doesn't match a tracked app, surface it as "not tracked" and stop there.
 

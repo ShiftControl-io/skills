@@ -1,0 +1,16 @@
+# Code owners for ShiftControl-io/skills
+#
+# Every PR must be approved by a code owner listed here.
+# This file is enforced by GitHub branch protection on `main`.
+
+# Default — anything in the repo
+*       @shiftcontrol-dan
+
+# Skill content — same as default for now; expand as the team grows
+skills/  @shiftcontrol-dan
+
+# Repo tooling and governance
+.github/         @shiftcontrol-dan
+CONTRIBUTING.md  @shiftcontrol-dan
+CODEOWNERS       @shiftcontrol-dan
+LICENSE          @shiftcontrol-dan

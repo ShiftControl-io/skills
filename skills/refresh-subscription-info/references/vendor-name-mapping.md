@@ -52,6 +52,54 @@ If the invoice's From-address domain matches a known vendor, accept that match e
 
 Build a domain → product mapping as you go: when you successfully match a vendor by name, remember its domain for the rest of the session.
 
+**Acquired-product domain rebinds** — the From-domain doesn't always match the product because the parent company sometimes takes over billing post-acquisition. **Both patterns coexist for the SAME vendor depending on the customer's plan**:
+
+- **SMB / monthly contracts** typically keep the original billing domain (e.g. Slack continues to bill from `feedback@slack.com` for month-to-month and small-team accounts).
+- **Enterprise / annual contracts** are frequently migrated to the parent's billing platform. Real-world example: Slack annual contracts bill from `Salesforce APAC Billing <billing@apac.salesforce.com>` with subject `"salesforce.com Invoice <NUMBER>, <Customer Org>"`. The Salesforce email body often does NOT say "Slack" — the product name is only in the **attached PDF**. This is the canonical case for why PDF parsing matters.
+- Other Salesforce-billed products on the same template: Heroku, Tableau, MuleSoft, ExactTarget / Marketing Cloud.
+
+**Don't assume the rebind has or hasn't happened**; read the body AND parse the PDF for the product name. If the From-domain is `salesforce.com` (or another acquirer) but you can't identify the product from the body alone, the PDF attachment is where the product is named. Match to the product named in the body or PDF, and annotate the note with `(billed via <ParentCompany>)` so the next reader understands the From-address — e.g. `"Updated from Slack invoice dated 2026-02-17 (billed via Salesforce)"`.
+
+### Observed vendor → email-sender patterns
+
+A non-exhaustive catalog of patterns observed in real ShiftControl inboxes. The skill should recognize these but not be limited to them.
+
+| Product | Typical From | Subject pattern | Format |
+|---|---|---|---|
+| Slack | `feedback@slack.com` | "<Org>, your plan has renewed", "<Org>, you're all set" | Inline body + "View Receipt" link |
+| Notion | `team@mail.notion.so`, vendor-templated | "Updates to your Notion invoice" (incremental), "Notion reminder: You will be charged in N days" (pre-renewal) | Inline body |
+| GitHub | `noreply@github.com` | "GitHub Invoice <INV-ID> - <Org>" | PDF attached |
+| Granola | `notifications@mail.granola.ai` (and Stripe template) | "Your receipt from Granola #<NUMBER>" | Stripe-template inline |
+| Framer | (Stripe-template sender) | "Your receipt from Framer B.V. #<NUMBER>" | Stripe-template inline |
+| Anthropic | `invoice+statements@mail.anthropic.com` | "Your receipt from Anthropic, PBC #<NUMBER>" | Stripe-template inline |
+| 1Password | (varies) | "Your 1Password invoice (<Org>)" | Inline body |
+| JumpCloud | (varies; often forwarded by an internal alias) | "Invoice <NUMBER> from JumpCloud" | PDF attached |
+| Cloudflare | (varies) | "Your invoice is attached" OR "Your Cloudflare purchase confirmation" | PDF or "View invoice" link |
+| Zoom | (varies) | "Payment Processed for <NUMBER>" | PDF attached |
+| AWS | `invoicing@aws.com`, `aws-globalreceivables@email.amazon.com` | "Amazon Web Services Billing Statement", "AWS Marketplace Statement" | PDF |
+
+### Stripe-template receipts are a recognizable shape
+
+Several vendors (Granola, Framer, Anthropic, others) use Stripe's billing platform, which produces a recognizable email template:
+
+- Subject: `"Your receipt from <Vendor> #<NUMBER>"`
+- Body opens with the vendor name and an invoice/receipt number
+- A "View receipt" or "Download invoice" link is usually present
+- Charge amount and period are inline
+
+When you see this template, the vendor in the subject IS the vendor you're matching — the From-address may be the vendor's own domain or a Stripe relay.
+
+### 4a. Reseller line-item matching
+
+When the invoice is from a reseller (ShiftControl-as-reseller, CDW, Insight, Carahsoft, Stripe-as-consolidator), the reseller's name is on the envelope but the products are in line items. Match each line item separately:
+
+1. Read the line items in the body.
+2. For each line item, run matching rules 1-3 above against the line-item text (e.g. "Google Workspace Business Plus — 50 seats") against the user's app list.
+3. Create one proposed update per matched line item.
+4. Annotate each note with `(billed via <Reseller>)` — e.g. `"Updated from Google Workspace invoice dated 2026-03-15 (billed via ShiftControl)"`.
+
+If a reseller line item doesn't match any ShiftControl app, surface it as a not-tracked entry separately (same path as a standalone unmatched invoice).
+
 ### 5. Fuzzy match
 
 Edit distance ≤ 2 on normalized strings, but only for app names ≥ 6 characters (avoids false matches on short names like "Box" → "Bot").
@@ -91,4 +139,4 @@ Should I apply each line item to its respective app? (yes / no / let me decide e
 
 ## Why not LLM-judge every match
 
-LLM-based matching is appealing but flaky and non-deterministic. The deterministic rules above produce a smaller, higher-quality match set. If the rules don't match, the right move is **"ask the user"**, not "have the LLM guess harder". Asking is auditable; guessing isn't.
+LLM-based matching is appealing but flaky and non-deterministic. The deterministic rules above produce a smaller, higher-quality match set. If the rules don't match, the right move is **"ask the user"**, not "have the LLM guess harder". Asking leaves a clear record of why each match was made; guessing doesn't.

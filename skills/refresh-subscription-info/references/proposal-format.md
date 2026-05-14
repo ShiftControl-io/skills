@@ -24,7 +24,7 @@ or "show details for N" to see the full invoice context for change N.
    {field}:   {current value}   →   {proposed value}
    {field}:   {current value}   →   {proposed value}
    ...
-   note will be added: "{audit string}"
+   notes update: "{note string}"
 ```
 
 Rules:
@@ -34,7 +34,8 @@ Rules:
 - Show `(not set)` for currently-null fields rather than blanks.
 - Format costs with **currency symbol AND unit**: `$8.00/user/month`, `$300.00/year flat`, `€50.00/user/year`.
 - Format dates as ISO 8601 date only: `2026-03-15`.
-- Include the `note will be added:` line on every block — transparency about the audit trail is non-negotiable.
+- Include the `notes update:` line on every block — showing the user that the change will also write a short context note to the app is part of "no surprises". The phrasing `notes update` (not `notes added`) is intentional: the skill replaces its own previous note line rather than accumulating new ones every time it runs.
+- For reseller / parent-billed invoices, include the source in the note string: `"Updated from Slack invoice dated 2026-03-15 (billed via Salesforce)"`.
 
 ## No-change blocks
 
@@ -85,6 +86,6 @@ Three audiences read it:
 
 1. **The user** — wants to scan quickly, see what's changing, decide.
 2. **The agent** — wants unambiguous item numbers to reference in approval messages.
-3. **The audit reviewer (later)** — wants to reconstruct what was proposed vs what was approved.
+3. **Someone reviewing the record later** — wants to reconstruct what was proposed vs what was approved.
 
 The format serves all three. Don't deviate without good reason.

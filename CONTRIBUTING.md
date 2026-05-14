@@ -6,8 +6,7 @@ Thanks for your interest in contributing. This repo holds customer-facing AI ski
 
 1. **Skills propose, humans approve.** Every skill that performs a write MUST present a concrete diff (before → after) and require explicit user approval before calling the MCP server. Never auto-confirm.
 2. **No invented identifiers.** Skills MUST source every UUID from a prior `list_*` or `get_*` tool call. Guessing or constructing UUIDs is rejected at review.
-3. **Audit trail in notes.** Any write that doesn't already produce an audit-log entry on the backend MUST append a `notes` value identifying the skill, version, and source data (e.g. `"Updated via refresh-subscription-info v0.1.0 from invoice dated 2026-03-15"`).
-4. **Stay within the documented MCP tool surface.** If you need a new tool, file an MCP server change first; don't work around the API.
+3. **Stay within the documented MCP tool surface.** If you need a new tool, file an MCP server change first; don't work around the API.
 
 ## Commit signing — required
 
@@ -49,8 +48,15 @@ Same flow. Bump the version when behavior changes meaningfully (new MCP tool dep
 ## Release process
 
 - Merged PRs land on `main`.
-- We tag releases as `vMAJOR.MINOR.PATCH` (`v0.1.0`, `v0.2.0`, etc.).
-- Each tag triggers a release with zipped skill folders for claude.ai users who can't install from a Git URL directly.
+- The top-level `VERSION` file is the source of truth (single SemVer line, e.g. `0.1.0`).
+- To cut a release: open a PR that bumps `VERSION`. On merge, `.github/workflows/release.yaml` automatically:
+  1. Imports a CI signing GPG key
+  2. Creates a signed tag `v<VERSION>`
+  3. Pushes the tag
+  4. Builds per-skill zip artifacts (one zip per `skills/<name>/` folder)
+  5. Creates a GitHub release with auto-generated notes from the commit history and attaches the zips
+- Tags are `vMAJOR.MINOR.PATCH` (`v0.1.0`, `v0.2.0`, etc.) per [SemVer](https://semver.org). Per-skill versions live in the SKILL.md frontmatter for the moment; repo-level VERSION is the release coordinator.
+- The release workflow only fires when `VERSION` itself changes — skill edits without a version bump land on `main` without producing a release. Bump `VERSION` deliberately.
 
 ## Code of conduct
 
