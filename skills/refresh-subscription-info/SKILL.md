@@ -47,7 +47,7 @@ This is your authoritative "what's currently recorded" baseline.
 
 ### Step 2 — Define the search window
 
-By default, search the user's email for invoices received in the last **90 days**. If the user asks for a wider or narrower window, honor it.
+By default, search the user's email for invoices received in the last **18 months**. Annual contracts are common in SaaS, and a one-year window risks missing the most recent renewal invoice for any app that bills annually — 18 months gives you the current annual invoice plus a buffer to confirm you have the latest one. If the user asks for a narrower window ("just the last quarter", "this month only"), honor it.
 
 ### Step 3 — Search the email inbox
 
@@ -109,7 +109,7 @@ Found invoices for 10 of your 23 ShiftControl apps. Proposed updates:
 
 [... more ...]
 
-Apps with no invoice in the last 90 days (13): [list]
+Apps with no invoice in the last 18 months (13): [list]
 Invoices found for apps not in ShiftControl (2): [list of vendor names]
 
 Reply "approve N" (e.g. "approve 1, 3, 5") to apply specific changes,

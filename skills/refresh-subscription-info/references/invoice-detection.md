@@ -29,9 +29,9 @@ Refine when too noisy by adding excluded senders the user has explicitly flagged
 
 ## Time window guidance
 
-- **Default: 90 days** — typically covers monthly billing cycles plus quarterly cadence.
-- **For annual-only contracts:** extend to **400 days** if the user asks for a comprehensive sweep.
-- Don't pull older than **18 months** unless the user explicitly requests it — old invoices are usually superseded.
+- **Default: 18 months** — covers every billing cadence (monthly, quarterly, annual) plus enough buffer to catch the most recent annual renewal invoice. Annual contracts dominate in SaaS; a window shorter than 12 months risks missing the latest invoice for half the user's apps.
+- **Narrower windows when the user asks:** "this month only", "last quarter", "since the last review" — honor whatever the user specifies. A monthly review of just the most recent month is a legitimate workflow.
+- **Wider than 18 months:** rare. Old invoices are usually superseded by more recent ones, and pulling beyond 18 months risks proposing changes based on stale pricing. Only extend if the user explicitly asks (e.g. "go back two years to find the original contract").
 
 ## What to do when the inbox is huge
 
