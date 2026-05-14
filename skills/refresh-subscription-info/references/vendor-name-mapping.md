@@ -52,6 +52,25 @@ If the invoice's From-address domain matches a known vendor, accept that match e
 
 Build a domain → product mapping as you go: when you successfully match a vendor by name, remember its domain for the rest of the session.
 
+**Acquired-product domain rebinds** — the From-domain doesn't always match the product because the parent company took over billing post-acquisition. Body content (subject, line items, "Pay <X>" references) is authoritative when the From-domain is the parent's:
+
+- `noreply@salesforce.com` / `slackinvoices@salesforce.com` with "Slack" in body → match the user's Slack app
+- `noreply@salesforce.com` with "Heroku" in body → match the user's Heroku app (if tracked)
+- Future Adobe-Figma billing — same pattern once that closes
+
+Annotate these in the audit note as `(billed via Salesforce)` / `(billed via Adobe)` so the next reader understands the From-address.
+
+### 4a. Reseller line-item matching
+
+When the invoice is from a reseller (ShiftControl-as-reseller, CDW, Insight, Carahsoft, Stripe-as-consolidator), the reseller's name is on the envelope but the products are in line items. Match each line item separately:
+
+1. Read the line items in the body.
+2. For each line item, run matching rules 1-3 above against the line-item text (e.g. "Google Workspace Business Plus — 50 seats") against the user's app list.
+3. Create one proposed update per matched line item.
+4. Annotate each note with `(billed via <Reseller>)` — e.g. `"Updated from Google Workspace invoice dated 2026-03-15 (billed via ShiftControl)"`.
+
+If a reseller line item doesn't match any ShiftControl app, surface it as a not-tracked entry separately (same path as a standalone unmatched invoice).
+
 ### 5. Fuzzy match
 
 Edit distance ≤ 2 on normalized strings, but only for app names ≥ 6 characters (avoids false matches on short names like "Box" → "Bot").

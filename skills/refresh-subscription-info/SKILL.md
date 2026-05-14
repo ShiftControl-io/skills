@@ -89,6 +89,10 @@ For **full invoices**, every field below is fair game. For **incrementals**, tre
 - **Contract renewal/end date** — if mentioned ("renews on…", "auto-renews", "contract through…"). Incrementals often confirm or update this.
 - **Plan/tier** — the plan name on the invoice ("Pro", "Business", "Enterprise"). If a recent incremental announces a plan change, trust it over an older full invoice.
 
+**PDF attachments:** if the email body says "Your invoice is attached" but lacks the cost details, the data is in the PDF. Most email MCPs return attachment contents — fetch and parse the PDF the same way as an inline-bodied invoice. If your email MCP can't return attachments, mark the invoice uncertain.
+
+**Web-hosted invoices:** if the invoice details are behind a "Click here to view your invoice" link rather than in the body or an attachment, **ask the user** before following the link: *"I found invoices from <vendor> where the details are behind a 'view invoice' link — should I follow those links to extract the cost details?"* If the user agrees AND your assistant can fetch URLs, fetch and parse. Otherwise mark uncertain.
+
 If a candidate has an unclear vendor, no reliable extractable data, or is only an incremental for a vendor with no full invoice in the window, mark it **uncertain** and exclude that vendor's cost fields from the proposal. Surface it to the user separately: "I only found mid-period adjustment invoices for <vendor> — I can update the plan tier and contract date, but the per-user cost is too noisy to propose."
 
 ### Step 5 — Match invoices to ShiftControl apps
@@ -117,11 +121,11 @@ Found invoices for 10 of your 23 ShiftControl apps. Proposed updates:
    cost:               $8.00/user/month  →  $7.00/user/month
    billingFrequency:   month             →  year
    contractEndDate:    (not set)         →  2027-03-15
-   note will be added: "Updated from Slack invoice dated 2026-03-15"
+   notes update:       "Updated from Slack invoice dated 2026-03-15 (billed via Salesforce)"
 
 2. Notion
    cost:               $12.00/user/month →  $10.00/user/month
-   note will be added: "Updated from Notion invoice dated 2026-03-08"
+   notes update:       "Updated from Notion invoice dated 2026-03-08"
 
 [... more ...]
 
@@ -164,7 +168,7 @@ For each approved (app, changes) pair, call `update_app_subscription` with:
 - `appId`: the UUID from Step 1.
 - `confirm: true` — set this only because you just obtained the user's explicit approval.
 - **Only the fields that actually changed** (omit unchanged ones — they keep their current value on the backend).
-- `notes`: append a short line in the form `"Updated from <Vendor> invoice dated <YYYY-MM-DD>"` so the next person to look at the record can see where these values came from. Read the current notes from Step 1's snapshot and append; don't overwrite.
+- `notes`: write a single line in the form `"Updated from <Vendor> invoice dated <YYYY-MM-DD>"`. If the invoice came via a reseller (e.g. Slack billed by Salesforce, Google Workspace billed by ShiftControl, JumpCloud billed by a partner), append `(billed via <Reseller>)` — e.g. `"Updated from Slack invoice dated 2026-03-15 (billed via Salesforce)"`. **Replace** any previous skill-written line of the same form (this skill runs repeatedly; we don't want notes to accumulate one line per run). Match for replacement using the pattern: line begins with `Updated from ` and contains `invoice dated <YYYY-MM-DD>`. **Preserve every other line** the user (or any other source) put in the notes field — only the skill's own previous "Updated from..." line gets replaced. If no such previous line exists, add the new one at the end.
 
 Process each app **sequentially** (not parallel) so errors are clearly attributable. After all writes, report back:
 
@@ -185,7 +189,8 @@ If any write fails, report which one and why, but keep going with the rest. **Do
 - ❌ Calling `update_app_subscription` with `confirm: true` because "the user is asking for updates". They're asking for a **proposal**, not blanket approval. Always present the diff first.
 - ❌ Constructing an `appId` from a name. The UUID must come from `list_apps`.
 - ❌ Inferring `costStructure` when the invoice is ambiguous. If you can't tell whether it's per-seat or flat, leave that field out of the proposal and let the user decide.
-- ❌ Overwriting `notes` instead of appending. Read current notes; append the new line.
+- ❌ Wiping out user-written notes. The skill replaces ONLY its own previous line (matching `Updated from <X> invoice dated <date>...`). Any other content in the notes — vendor contact, negotiation history, owner email, manual annotations — must be preserved.
+- ❌ Accumulating one new note line every time the skill runs. The skill is designed to be re-run regularly; replace the prior skill line, don't pile on.
 - ❌ Proposing changes for apps where no invoice was found, based on "you probably renewed at the same rate". This skill is **invoice-driven**: no invoice → no change.
 - ❌ Creating new apps. If an invoice doesn't match a tracked app, surface it as "not tracked" and stop there.
 

@@ -106,20 +106,49 @@ A separate but adjacent gotcha: full invoices can be quoted at different cadence
 
 ShiftControl stores per-unit cost AND billing frequency separately, so the normalization always preserves both pieces. Don't multiply / divide cost without also updating billingFrequency.
 
+## Vendor identity beyond the "From" address
+
+The vendor billing the user isn't always the vendor named on the invoice. Two big patterns:
+
+### Vendor renames and acquisitions
+
+When a SaaS company is acquired, billing often moves to the parent. The product name in ShiftControl stays the same; the invoice arrives from a different domain.
+
+| Product | Bills as | Notes |
+|---|---|---|
+| Slack | Salesforce (`noreply@salesforce.com`, `slackinvoices@salesforce.com`) | Slack was acquired by Salesforce in 2021; invoices migrated. The body still says "Slack" — only the From address changed. |
+| Heroku | Salesforce | Same story (Salesforce-Heroku acquisition). |
+| Figma | Adobe (post-acquisition close) | Watch for this if/when the acquisition closes. |
+| MongoDB Atlas | mongodb.com (no change) | Listed because it's the most common "is this really MongoDB?" question — yes, Atlas billing is direct from mongodb.com. |
+
+When matching to a ShiftControl app, **rely on the body content** (subject line, "Pay <Slack Technologies>" line, product names in line items) over the From address for these cases. Annotate the note with `(billed via <Parent>)` so the user can see why the invoice came from an unexpected sender.
+
+### Resellers (bundled and consolidator billing)
+
+A reseller buys SaaS in bulk and re-bills the customer. The invoice is from the RESELLER; the actual SaaS product is in line items. Examples:
+
+- **ShiftControl itself** — for Google Workspace and JumpCloud customers, ShiftControl bills the customer directly; the customer doesn't see Google or JumpCloud invoices. The ShiftControl invoice line items name the underlying product.
+- **CDW, Insight, Carahsoft, Crayon, SoftwareOne** — large IT resellers; one invoice may cover dozens of SaaS line items.
+- **Stripe (as consolidator)** — Stripe sometimes bills the customer on behalf of multiple upstream SaaS vendors. Look for "On behalf of <Vendor>" or "Pay <Vendor>" in the body.
+
+When the invoice is from a reseller, the skill:
+
+1. Reads the line items to find which ShiftControl-tracked apps the invoice covers.
+2. Creates a SEPARATE proposed update per app (one ShiftControl invoice covering Google Workspace + JumpCloud → two diff blocks in the proposal, one per app).
+3. Annotates the note with `(billed via <Reseller>)` for each affected app — e.g. `"Updated from Google Workspace invoice dated 2026-03-15 (billed via ShiftControl)"`.
+
+If a reseller invoice has line items that don't match any ShiftControl app, treat each unmatched line the same way an unmatched standalone invoice would be — surface to the user as "found a Adobe Creative Cloud line on the ShiftControl invoice, but you don't track Adobe in ShiftControl yet."
+
 ## Other failure modes worth flagging
 
-- **Vendor consolidator** — emails from Stripe billing the user on behalf of MANY upstream SaaS vendors. The "From" is Stripe but the actual vendor is in the body. Look for "On behalf of" or "Pay <vendor>".
-- **Reseller invoicing** — organizations that buy SaaS through a reseller (CDW, Insight, Carahsoft, etc.). Vendor on the invoice is the reseller; the actual SaaS product is in line items.
 - **Currency conversion** — invoice in USD but user's org defaults to EUR/SGD. Surface the invoice currency; don't auto-convert. Let the user decide whether to store in invoice currency or org default.
-- **PDF-only invoices** — the email body is "Your invoice is attached" with no structured data; the actual numbers are in the PDF. v0.1.0 does NOT parse PDF attachments — mark these as uncertain.
-- **Web-hosted invoices** — "Click here to view your invoice" with the actual numbers behind a link. v0.1.0 does NOT follow these links — mark these as uncertain.
+- **PDF invoices** — many SaaS vendors send the invoice details as a PDF attachment with only a short summary in the email body ("Your invoice is attached"). **Parse the PDF**: most email MCPs return attachment contents, and most AI assistants can read PDFs natively. Extract the same fields (vendor, amounts, service period, seats, plan tier) from the PDF as you would from an inline body. If your email MCP can't return attachments OR your assistant can't read PDFs, mark the invoice uncertain and surface to the user.
+- **Web-hosted invoices** — "Click here to view your invoice" with the actual numbers behind a link rather than in the body or attachment. **Ask the user before following the link** — most will say yes, some prefer not to follow links from their inbox. Phrasing: *"I found invoices from <vendor> where the details are behind a 'view invoice' link — should I follow those links to extract the cost?"* If the user agrees and your assistant has a web-fetch capability, fetch and parse. Otherwise mark uncertain.
 
 ## What this skill does NOT do (yet)
 
 These are explicitly out-of-scope for v0.1.0 and tracked for v0.2.0+:
 
-- Parse PDF attachments
-- Follow links to web-hosted invoices
-- Integrate with Xero, QuickBooks, Brex, Ramp, or other finance systems
-- Multi-currency normalization
-- Automatic vendor → ShiftControl-app addition (creating apps from invoices)
+- Integrate with Xero, QuickBooks, Brex, Ramp, or other finance systems (v0.2.0 adds these as alternate sources alongside email)
+- Multi-currency normalization (skill surfaces the invoice currency; user decides whether to store in invoice currency or org default)
+- Automatic vendor → ShiftControl-app addition (skill never creates apps from invoices; only updates existing ones)
