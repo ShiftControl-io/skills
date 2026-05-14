@@ -1,14 +1,17 @@
 name: Validate skills
 
 on:
+  # Run on every PR into main so the 'validate' status check always reports.
+  # Branch protection requires the check, and a path-filter-skipped workflow
+  # leaves the status pending forever (blocks merge). The workflow itself is
+  # cheap — yq + a few greps — so running on every PR is fine.
   pull_request:
-    paths:
-      - 'skills/**'
-      - '.github/workflows/validate-skills.yaml'
+    branches: [main]
   push:
     branches: [main]
     paths:
       - 'skills/**'
+      - '.github/workflows/validate-skills.yaml'
 
 jobs:
   validate:
