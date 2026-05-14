@@ -1,12 +1,18 @@
 # ShiftControl Skills
 
-> Customer-facing AI skills (instruction sets) for [ShiftControl](https://shiftcontrol.io). Each skill pairs with the ShiftControl MCP server at `https://mcp.shiftcontrol.io/mcp` to drive a specific SaaS-management workflow.
+> Let your AI assistant manage your SaaS. These skills connect Claude, Cursor, ChatGPT, and other AI tools to [ShiftControl](https://shiftcontrol.io) so you can update subscription costs, audit spend, and reconcile your records with real invoices — through natural conversation, with you approving every change.
+
+## What you can do today
+
+- **Stop chasing invoices through your inbox.** Ask your AI to *"refresh my subscription info from my recent invoices"* and it'll search your email, match each invoice to an app in ShiftControl, show you exactly what would change (e.g. Slack $8/user/mo → $7/user/mo, contract through 2027-03-15), and update only what you approve. Every change is audit-logged.
+- **Use the AI tool you already use.** Claude Desktop, Claude Code, Cursor, Windsurf, Cline, Continue.dev, ChatGPT, Gemini — see [INSTALL.md](INSTALL.md) for your tool.
+- **Sign in once.** Connecting takes a single OAuth click through your normal ShiftControl login. Your AI gets exactly the permissions you already have — nothing more.
 
 ## Quick start
 
-1. **Install the ShiftControl MCP server** in your AI assistant. See [INSTALL.md](INSTALL.md) for per-platform instructions (Claude Desktop, Claude Code, Cursor, Windsurf, ChatGPT, and more).
-2. **Install one or more skills** from the table below — each is a folder with a `SKILL.md` your AI assistant loads on demand.
-3. **Ask your AI to do the thing**, e.g. *"Refresh my ShiftControl subscription info from my recent invoices."*
+1. **Connect your AI to ShiftControl** — one-time MCP server install. [INSTALL.md](INSTALL.md) has step-by-step for every supported AI tool.
+2. **Install a skill** — copy a workflow from the catalog below into your AI assistant. Claude surfaces (Desktop / Code / claude.ai) install natively; Cursor / Windsurf / ChatGPT accept the skill as a rule or system prompt.
+3. **Just ask.** *"Refresh my ShiftControl subscriptions from my recent invoices."* Your AI follows the skill, calls ShiftControl on your behalf, shows you what would change, and waits for your green light.
 
 ## Available skills
 
