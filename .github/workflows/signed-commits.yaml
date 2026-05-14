@@ -1,0 +1,26 @@
+name: Signed commits required
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check every commit in the PR is signed
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          fail=0
+          commits=$(gh api "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/commits" --jq '.[].sha')
+          for sha in $commits; do
+            verified=$(gh api "repos/${{ github.repository }}/commits/$sha" --jq '.commit.verification.verified')
+            if [ "$verified" != "true" ]; then
+              reason=$(gh api "repos/${{ github.repository }}/commits/$sha" --jq '.commit.verification.reason')
+              echo "::error::Commit $sha is not signed (reason: $reason). See CONTRIBUTING.md for setup."
+              fail=1
+            fi
+          done
+          exit $fail

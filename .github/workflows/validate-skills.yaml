@@ -1,0 +1,83 @@
+name: Validate skills
+
+on:
+  pull_request:
+    paths:
+      - 'skills/**'
+      - '.github/workflows/validate-skills.yaml'
+  push:
+    branches: [main]
+    paths:
+      - 'skills/**'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install yq
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Validate every SKILL.md
+        run: |
+          set -e
+          fail=0
+          for f in skills/*/SKILL.md; do
+            echo "::group::Validating $f"
+
+            # Extract YAML frontmatter (between the first two --- lines)
+            fm=$(awk '/^---$/{c++; if(c==2) exit; next} c==1' "$f")
+            if [ -z "$fm" ]; then
+              echo "::error file=$f::Missing YAML frontmatter"
+              fail=1
+              echo "::endgroup::"
+              continue
+            fi
+
+            name=$(echo "$fm" | yq -r '.name // ""')
+            description=$(echo "$fm" | yq -r '.description // ""')
+
+            # Required fields
+            if [ -z "$name" ]; then
+              echo "::error file=$f::frontmatter missing required 'name'"
+              fail=1
+            fi
+            if [ -z "$description" ]; then
+              echo "::error file=$f::frontmatter missing required 'description'"
+              fail=1
+            fi
+
+            # name constraints
+            if [ ${#name} -gt 64 ]; then
+              echo "::error file=$f::'name' exceeds 64 characters (${#name})"
+              fail=1
+            fi
+            if ! echo "$name" | grep -qE '^[a-z0-9-]+$'; then
+              echo "::error file=$f::'name' must be lowercase letters / digits / hyphens only (got: $name)"
+              fail=1
+            fi
+            if echo "$name" | grep -qiE 'anthropic|claude'; then
+              echo "::error file=$f::'name' contains reserved word (anthropic/claude)"
+              fail=1
+            fi
+
+            # description ≤ 200 chars (claude.ai limit; API allows 1024 but we target the strictest)
+            if [ ${#description} -gt 200 ]; then
+              echo "::error file=$f::'description' exceeds 200 characters (${#description})"
+              fail=1
+            fi
+
+            # Directory name must match frontmatter name
+            dir=$(basename "$(dirname "$f")")
+            if [ "$dir" != "$name" ]; then
+              echo "::error file=$f::directory name '$dir' must match frontmatter name '$name'"
+              fail=1
+            fi
+
+            echo "OK: name=$name, description length=${#description}"
+            echo "::endgroup::"
+          done
+          exit $fail
