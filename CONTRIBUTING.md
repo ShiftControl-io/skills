@@ -58,29 +58,16 @@ Same flow. Bump the version when behavior changes meaningfully (new MCP tool dep
 - Tags are `vMAJOR.MINOR.PATCH` (`v0.1.0`, `v0.2.0`, etc.) per [SemVer](https://semver.org). Per-skill versions live in the SKILL.md frontmatter for the moment; repo-level VERSION is the release coordinator.
 - The release workflow only fires when `VERSION` itself changes — skill edits without a version bump land on `main` without producing a release. Bump `VERSION` deliberately.
 
-### CI signing key setup (one-time, by a repo admin)
+### CI signing key (already configured at org level)
 
-The release workflow signs tags with a dedicated CI GPG key. To set this up:
+The release workflow signs tags with the ShiftControl-io organization's CI GPG key, which is already provisioned as **organization-level secrets** in the GitHub org:
 
-1. Generate a new GPG key for CI use (separate from contributors' personal keys):
-   ```bash
-   gpg --batch --gen-key <<EOF
-   %no-protection
-   Key-Type: EDDSA
-   Key-Curve: ed25519
-   Subkey-Type: ECDH
-   Subkey-Curve: cv25519
-   Name-Real: ShiftControl Skills CI
-   Name-Email: ci@shiftcontrol.io
-   Expire-Date: 2y
-   EOF
-   ```
-2. Export and add to GitHub repo secrets:
-   - `GPG_PRIVATE_KEY` — `gpg --armor --export-secret-keys ci@shiftcontrol.io`
-   - `GPG_PASSPHRASE` — passphrase used when generating (or empty if `%no-protection` as above)
-3. Add the matching public key to a service account's GitHub profile (or the bot user that GitHub Actions runs as) so signatures show as "Verified" in the UI.
+- `GPG_PRIVATE_KEY` — the CI signing key in ASCII-armor format
+- `GPG_PASSPHRASE` — the matching passphrase (empty if the key was generated unprotected)
 
-If you skip this setup, the workflow's tag-import step will fail and no releases will publish. The repo will still accept signed-commit PRs from contributors regardless.
+Both are available to this repo automatically — no per-repo setup needed. The same secrets back the release workflows in other ShiftControl-io repos (e.g. `google_api_sdk`), so the same signing identity appears on tags across the org.
+
+**If you fork this repo** to your own org, you'll need to provision equivalent secrets at your org or repo level — see GitHub's [docs on org-level Actions secrets](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-an-organization) and the [GPG-import action](https://github.com/crazy-max/ghaction-import-gpg). Without the secrets, the release workflow's tag-import step will fail and no releases will publish; the repo still accepts signed-commit PRs from contributors regardless.
 
 ## Code of conduct
 
