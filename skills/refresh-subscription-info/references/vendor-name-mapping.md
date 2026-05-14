@@ -91,4 +91,4 @@ Should I apply each line item to its respective app? (yes / no / let me decide e
 
 ## Why not LLM-judge every match
 
-LLM-based matching is appealing but flaky and non-deterministic. The deterministic rules above produce a smaller, higher-quality match set. If the rules don't match, the right move is **"ask the user"**, not "have the LLM guess harder". Asking is auditable; guessing isn't.
+LLM-based matching is appealing but flaky and non-deterministic. The deterministic rules above produce a smaller, higher-quality match set. If the rules don't match, the right move is **"ask the user"**, not "have the LLM guess harder". Asking leaves a clear record of why each match was made; guessing doesn't.

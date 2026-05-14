@@ -101,11 +101,11 @@ Found invoices for 10 of your 23 ShiftControl apps. Proposed updates:
    cost:               $8.00/user/month  →  $7.00/user/month
    billingFrequency:   month             →  year
    contractEndDate:    (not set)         →  2027-03-15
-   note will be added: "Updated from Slack invoice dated 2026-03-15 via refresh-subscription-info v0.1.0"
+   note will be added: "Updated from Slack invoice dated 2026-03-15"
 
 2. Notion
    cost:               $12.00/user/month →  $10.00/user/month
-   note will be added: "Updated from Notion invoice dated 2026-03-08 via refresh-subscription-info v0.1.0"
+   note will be added: "Updated from Notion invoice dated 2026-03-08"
 
 [... more ...]
 
@@ -148,7 +148,7 @@ For each approved (app, changes) pair, call `update_app_subscription` with:
 - `appId`: the UUID from Step 1.
 - `confirm: true` — set this only because you just obtained the user's explicit approval.
 - **Only the fields that actually changed** (omit unchanged ones — they keep their current value on the backend).
-- `notes`: append a line in the form `"Updated from <Vendor> invoice dated <YYYY-MM-DD> via refresh-subscription-info v0.1.0"` — read the current notes from Step 1's snapshot and append, don't overwrite.
+- `notes`: append a short line in the form `"Updated from <Vendor> invoice dated <YYYY-MM-DD>"` so the next person to look at the record can see where these values came from. Read the current notes from Step 1's snapshot and append; don't overwrite.
 
 Process each app **sequentially** (not parallel) so errors are clearly attributable. After all writes, report back:
 
@@ -159,7 +159,7 @@ Applied 8 of 8 approved changes:
 ✓ Figma — updated
 [...]
 
-You can review the full audit log in ShiftControl → Apps → <app> → History.
+You can review the full change history in ShiftControl → Apps → <app> → History.
 ```
 
 If any write fails, report which one and why, but keep going with the rest. **Don't roll back successful writes** — incremental progress is more valuable than atomicity here.
@@ -169,7 +169,7 @@ If any write fails, report which one and why, but keep going with the rest. **Do
 - ❌ Calling `update_app_subscription` with `confirm: true` because "the user is asking for updates". They're asking for a **proposal**, not blanket approval. Always present the diff first.
 - ❌ Constructing an `appId` from a name. The UUID must come from `list_apps`.
 - ❌ Inferring `costStructure` when the invoice is ambiguous. If you can't tell whether it's per-seat or flat, leave that field out of the proposal and let the user decide.
-- ❌ Overwriting `notes` instead of appending. Read current notes; append the audit line.
+- ❌ Overwriting `notes` instead of appending. Read current notes; append the new line.
 - ❌ Proposing changes for apps where no invoice was found, based on "you probably renewed at the same rate". This skill is **invoice-driven**: no invoice → no change.
 - ❌ Creating new apps. If an invoice doesn't match a tracked app, surface it as "not tracked" and stop there.
 

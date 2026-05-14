@@ -4,7 +4,7 @@
 
 ## What you can do today
 
-- **Stop chasing invoices through your inbox.** Ask your AI to *"refresh my subscription info from my recent invoices"* and it'll search your email, match each invoice to an app in ShiftControl, show you exactly what would change (e.g. Slack $8/user/mo → $7/user/mo, contract through 2027-03-15), and update only what you approve. Every change is audit-logged.
+- **Stop chasing invoices through your inbox.** Ask your AI to *"refresh my subscription info from my recent invoices"* and it'll search your email, match each invoice to an app in ShiftControl, show you exactly what would change (e.g. Slack $8/user/mo → $7/user/mo, contract through 2027-03-15), and update only what you approve. Each change records a short note in the app explaining where the new values came from.
 - **Use the AI tool you already use.** Claude Desktop, Claude Code, Cursor, Windsurf, Cline, Continue.dev, ChatGPT, Gemini — see [INSTALL.md](INSTALL.md) for your tool.
 - **Sign in once.** Connecting takes a single OAuth click through your normal ShiftControl login. Your AI gets exactly the permissions you already have — nothing more.
 
@@ -18,7 +18,7 @@
 
 | Skill | What it does | Status |
 |---|---|---|
-| [`refresh-subscription-info`](skills/refresh-subscription-info/) | Finds recent SaaS invoices in the user's email and proposes ShiftControl subscription updates (cost, billing frequency, contract terms, audit notes). | v0.1.0 |
+| [`refresh-subscription-info`](skills/refresh-subscription-info/) | Finds recent SaaS invoices in the user's email and proposes ShiftControl subscription updates (cost, billing frequency, contract terms, notes). | v0.1.0 |
 
 More coming. See [open skill proposals](https://github.com/ShiftControl-io/skills/issues?q=label%3Askill-request).
 
@@ -30,7 +30,7 @@ Every skill in this repo follows three rules:
 
 - **Assumes the ShiftControl MCP server is installed and authenticated** — see INSTALL.md
 - **Proposes changes for human approval before any write** — no silent mutations
-- **Logs an audit-friendly `notes` value on every change** — the change is traceable back to the skill, version, and source data
+- **Records a short note on each change** — so the next person to look at the app's record can see where the updated values came from
 
 ## Contributing
 

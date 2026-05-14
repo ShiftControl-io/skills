@@ -6,8 +6,7 @@ Thanks for your interest in contributing. This repo holds customer-facing AI ski
 
 1. **Skills propose, humans approve.** Every skill that performs a write MUST present a concrete diff (before → after) and require explicit user approval before calling the MCP server. Never auto-confirm.
 2. **No invented identifiers.** Skills MUST source every UUID from a prior `list_*` or `get_*` tool call. Guessing or constructing UUIDs is rejected at review.
-3. **Audit trail in notes.** Any write that doesn't already produce an audit-log entry on the backend MUST append a `notes` value identifying the skill, version, and source data (e.g. `"Updated via refresh-subscription-info v0.1.0 from invoice dated 2026-03-15"`).
-4. **Stay within the documented MCP tool surface.** If you need a new tool, file an MCP server change first; don't work around the API.
+3. **Stay within the documented MCP tool surface.** If you need a new tool, file an MCP server change first; don't work around the API.
 
 ## Commit signing — required
 
