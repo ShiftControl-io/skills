@@ -139,20 +139,25 @@ When the invoice is from a reseller, the skill:
 
 If a reseller invoice has line items that don't match any ShiftControl app, treat each unmatched line the same way an unmatched standalone invoice would be — surface to the user as "found a Adobe Creative Cloud line on the ShiftControl invoice, but you don't track Adobe in ShiftControl yet."
 
-## Dedicated invoice mailboxes and forwarding
+## Shared billing inboxes (the `invoices@` / `billing@` / `finance@` pattern)
 
-Many organizations route SaaS invoices to a dedicated alias like `invoices@<company>.io` either via mail-server forwarding rules (vendor mail arrives directly at the alias) or via user-level forwarding (a person forwards each invoice manually from their personal inbox).
+Many organizations set up a **shared billing inbox** — typically a Google Group or distribution list at an address like `invoices@<company>.io`, `billing@<company>.io`, or `finance@<company>.io`. They then configure each SaaS subscription's billing-contact email to point at that address, so all renewal / invoice mail lands in one place where finance can see and act on it.
 
-When the email-search MCP is reading the dedicated mailbox, the sender field will frequently show **the alias itself** (e.g. `invoices@shiftcontrol.io`) rather than the original vendor's address — because the email arrived via a forwarding rule. The original vendor is in the **body**:
+This means the **To-address** is the shared inbox, not the From-address. The From-address remains the actual vendor (`feedback@slack.com`, `noreply@github.com`, `team@mail.notion.so`, etc.). The skill should treat this pattern as the default, not the exception — most ShiftControl customers will run a shared billing inbox.
 
-- Subject line of the forwarded email
-- "From: <original sender>" line near the top of the body
-- Stripe-template "Your receipt from <Vendor>" pattern
-- Vendor logo / product name in the body header
+### How shared inboxes appear via email-search MCPs
 
-**Read the body to identify the vendor whenever the From-address is the user's own organization alias.** Don't skip these — they're often the bulk of the useful invoices.
+How the email surfaces in the search depends on how the user reads the group's mail:
 
-A practical heuristic: if the From-domain matches the user's company domain (the same domain ShiftControl runs on for that user's account), treat the email as forwarded and rely on the body for vendor identification.
+- **Reading the group's own mailbox directly** (if the email-search MCP authenticates against `invoices@<company>.io` as a mailbox): From-address is the vendor, exactly as expected.
+- **Reading a personal mailbox that's a group member**: Gmail's API sometimes shows the GROUP address as the sender for messages delivered through the group. The actual vendor is still recoverable from the email's standard headers (Reply-To, Sender, body From-line, "Your receipt from <Vendor>" subject), but a naive From-header check can mislead.
+- **Manual forwards from a personal inbox**: occasionally someone forwards a stray invoice into the group address. From is the forwarder; the original vendor is in the forwarded body.
+
+### Practical guidance
+
+- **Don't rely solely on the From-header to identify the vendor.** Cross-check the subject, the body's vendor name / logo, the Reply-To, and PDF attachment filenames (e.g. `Salesforce_Invoice_36849376.pdf` makes the product context obvious even when the body is sparse).
+- If the From-address is the user's own org alias (`invoices@<their-company>.io`) and the body header / subject names a recognizable SaaS vendor, treat the body as authoritative.
+- A search like `to:invoices@<their-company>.io newer_than:18m` is a high-precision starting point — the user has explicitly routed billing to that address, so almost every result is invoice-shaped (with the false-positive classes documented above still applying).
 
 ## False positives — outbound and unrelated emails
 
@@ -167,12 +172,37 @@ The dedicated invoice mailbox typically collects more than just SaaS subscriptio
 
 These all share a recognizable pattern: vendor doesn't match any tracked ShiftControl app, OR the email describes a one-off transaction rather than a subscription. When in doubt, surface in the "found but not tracked" section of the proposal rather than guessing.
 
-## Reseller invoices observed in practice
+## Distributors and resellers — direction matters
 
-In addition to the major resellers (CDW, Insight, Carahsoft, Crayon, SoftwareOne) listed earlier, real ShiftControl-customer inboxes commonly include:
+In addition to the major resellers (CDW, Insight, Carahsoft, Crayon, SoftwareOne) listed earlier, real inboxes commonly include:
 
-- **Ingram Micro Asia Marketplace** (`Imcloudservicedesk.hk@cloud.im`) — sells Acronis and other cloud services. Subjects: `"Invoice 2026SIHK00<NUMBER>"`, `"Credit Memo 2026CNHK<NUMBER>"`, `"Payment 2026PRHK<NUMBER> has been received"`. Watch for `"Credit Memo"` — those reduce a balance and shouldn't be parsed as a new charge.
+- **Ingram Micro** (`Imcloudservicedesk.hk@cloud.im`, also `*@ingrammicro.com`) — a large IT **distributor**. Subjects: `"Invoice <REGION>SI<HKSGUS>0000<NUMBER>"`, `"Credit Memo"`, `"Payment ... has been received"`, `"Your Account ... Was Put on Credit Hold"`.
 - **AWS Marketplace** (`invoicing@aws.com`) — third-party SaaS subscriptions billed through AWS. Subject contains `"AWS Marketplace Statement"` or `"AWS Marketplace Billing Statement"`. Line items name the underlying SaaS product.
+
+**Critical distinction — distributor invoices flow in both directions:**
+
+Large distributors like Ingram Micro work as a two-way channel. The same email account can receive:
+
+1. **Invoices for SaaS the user's organization consumes** (the org is the listed customer; this is a real subscription cost to reconcile).
+2. **Invoices for SaaS the user's organization SELLS THROUGH the distributor** to its own downstream customers (the org is the channel / partner, not the consumer; the listed customer is a third party).
+
+Only #1 should produce a proposed update in ShiftControl. #2 is a billing transaction on the user's own product, not a SaaS subscription they consume.
+
+**Detection signal — the "Bill To" / "Customer" field:**
+
+Parse the invoice (body or PDF) for the customer-side fields:
+
+- `Bill To: <Org Name>`
+- `Customer: <Org Name>`
+- `Sold To: <Org Name>`
+- `Account: <Org Name>` (less reliable — sometimes the distributor's own customer ID)
+
+If the listed customer matches the user's organization → real subscription → proceed.
+If the listed customer is someone else (a downstream company name unfamiliar to the user) → outbound channel sale → **filter out**. Surface in a "channel / resale invoices skipped" section of the proposal so the user knows you saw them but intentionally didn't act.
+
+Credit Memos and payment-received notifications also fall under this filter — they're typically not subscription cost changes either way. Mention them in the skipped section so the user can confirm.
+
+Credit Memos and payment-received notifications, even for direct consumption: don't propose changes from these. They modify a balance, not a per-unit cost. Surface as informational only.
 
 ## Other failure modes worth flagging
 

@@ -59,7 +59,7 @@ Use the email-search MCP to find candidate invoice emails. See [references/invoi
 - Filter OUT **inbound-payments-received** — emails saying things like *"<Vendor>, Inc. has sent you a payment"* or *"Coupa Pay has remitted X to your account"*. These represent money coming TO the user (referrals, vendor-side payments) and are not SaaS invoices.
 - Filter OUT clearly non-SaaS receipts (Amazon shopping, ride-share, restaurants, hardware, SSL certs, professional services, contractor invoices, telecom bills).
 
-**Dedicated invoice mailboxes:** if the user has a forwarding rule that routes invoices to a dedicated alias (e.g. `invoices@<their-company>.io`), the sender on most emails will be the alias itself rather than the original vendor. **Read the body** to identify the actual vendor — the original sender is in the forwarded body, the subject typically still contains the vendor name. Don't skip these; they're often the bulk of useful invoices.
+**Shared billing inboxes:** most organizations set up a shared `invoices@<their-company>.io`, `billing@<their-company>.io`, or `finance@<their-company>.io` address (a Google Group or distribution list) as the billing contact on every SaaS account. Invoices arrive at the *receiver* side at that address — the vendor is still the actual From-address. A search like `to:invoices@<their-company>.io newer_than:18m` is the highest-precision starting point. Ask the user which shared inbox they use if you're unsure; if there isn't one, fall back to searching the personal inbox.
 
 ### Step 4 — Classify, then extract structured data
 

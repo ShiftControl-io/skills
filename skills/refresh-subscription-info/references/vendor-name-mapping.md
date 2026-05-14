@@ -52,13 +52,13 @@ If the invoice's From-address domain matches a known vendor, accept that match e
 
 Build a domain → product mapping as you go: when you successfully match a vendor by name, remember its domain for the rest of the session.
 
-**Acquired-product domain rebinds** — the From-domain doesn't always match the product because the parent company sometimes takes over billing post-acquisition. The pattern varies per acquisition and per account:
+**Acquired-product domain rebinds** — the From-domain doesn't always match the product because the parent company sometimes takes over billing post-acquisition. **Both patterns coexist for the SAME vendor depending on the customer's plan**:
 
-- Some vendors keep their original billing domain post-acquisition (e.g. Slack frequently continues to bill from `feedback@slack.com` even after the Salesforce acquisition).
-- Others migrate to the parent (e.g. some Heroku accounts now bill from `noreply@salesforce.com`).
-- A few vendors split — some account types stay on the original domain while enterprise accounts move to the parent's billing.
+- **SMB / monthly contracts** typically keep the original billing domain (e.g. Slack continues to bill from `feedback@slack.com` for month-to-month and small-team accounts).
+- **Enterprise / annual contracts** are frequently migrated to the parent's billing platform. Real-world example: Slack annual contracts bill from `Salesforce APAC Billing <billing@apac.salesforce.com>` with subject `"salesforce.com Invoice <NUMBER>, <Customer Org>"`. The Salesforce email body often does NOT say "Slack" — the product name is only in the **attached PDF**. This is the canonical case for why PDF parsing matters.
+- Other Salesforce-billed products on the same template: Heroku, Tableau, MuleSoft, ExactTarget / Marketing Cloud.
 
-**Don't assume the rebind has happened**; read the body for the product name. If you DO see a clear rebind (the From-domain is one vendor and the body talks about a different product), match to the product named in the body and annotate the note with `(billed via <ParentCompany>)` so the next reader understands the From-address.
+**Don't assume the rebind has or hasn't happened**; read the body AND parse the PDF for the product name. If the From-domain is `salesforce.com` (or another acquirer) but you can't identify the product from the body alone, the PDF attachment is where the product is named. Match to the product named in the body or PDF, and annotate the note with `(billed via <ParentCompany>)` so the next reader understands the From-address — e.g. `"Updated from Slack invoice dated 2026-02-17 (billed via Salesforce)"`.
 
 ### Observed vendor → email-sender patterns
 

@@ -48,8 +48,39 @@ Same flow. Bump the version when behavior changes meaningfully (new MCP tool dep
 ## Release process
 
 - Merged PRs land on `main`.
-- We tag releases as `vMAJOR.MINOR.PATCH` (`v0.1.0`, `v0.2.0`, etc.).
-- Each tag triggers a release with zipped skill folders for claude.ai users who can't install from a Git URL directly.
+- The top-level `VERSION` file is the source of truth (single SemVer line, e.g. `0.1.0`).
+- To cut a release: open a PR that bumps `VERSION`. On merge, `.github/workflows/release.yaml` automatically:
+  1. Imports a CI signing GPG key
+  2. Creates a signed tag `v<VERSION>`
+  3. Pushes the tag
+  4. Builds per-skill zip artifacts (one zip per `skills/<name>/` folder)
+  5. Creates a GitHub release with auto-generated notes from the commit history and attaches the zips
+- Tags are `vMAJOR.MINOR.PATCH` (`v0.1.0`, `v0.2.0`, etc.) per [SemVer](https://semver.org). Per-skill versions live in the SKILL.md frontmatter for the moment; repo-level VERSION is the release coordinator.
+- The release workflow only fires when `VERSION` itself changes — skill edits without a version bump land on `main` without producing a release. Bump `VERSION` deliberately.
+
+### CI signing key setup (one-time, by a repo admin)
+
+The release workflow signs tags with a dedicated CI GPG key. To set this up:
+
+1. Generate a new GPG key for CI use (separate from contributors' personal keys):
+   ```bash
+   gpg --batch --gen-key <<EOF
+   %no-protection
+   Key-Type: EDDSA
+   Key-Curve: ed25519
+   Subkey-Type: ECDH
+   Subkey-Curve: cv25519
+   Name-Real: ShiftControl Skills CI
+   Name-Email: ci@shiftcontrol.io
+   Expire-Date: 2y
+   EOF
+   ```
+2. Export and add to GitHub repo secrets:
+   - `GPG_PRIVATE_KEY` — `gpg --armor --export-secret-keys ci@shiftcontrol.io`
+   - `GPG_PASSPHRASE` — passphrase used when generating (or empty if `%no-protection` as above)
+3. Add the matching public key to a service account's GitHub profile (or the bot user that GitHub Actions runs as) so signatures show as "Verified" in the UI.
+
+If you skip this setup, the workflow's tag-import step will fail and no releases will publish. The repo will still accept signed-commit PRs from contributors regardless.
 
 ## Code of conduct
 
