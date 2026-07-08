@@ -115,9 +115,20 @@ Any MCP client that supports remote OAuth 2.1 servers with Dynamic Client Regist
 - **Endpoint:** `https://mcp.shiftcontrol.io/mcp`
 - **OAuth discovery:** `https://mcp.shiftcontrol.io/.well-known/oauth-authorization-server`
 
+### Recommended permissions
+
+When your client asks how the ShiftControl tools may run, a good default is:
+
+- **Always allow** the read-only tools: `list_apps`, `get_app`, `list_groups`, `get_group`, `list_departments`, `list_locations`, `list_teams`.
+- **Require approval** for `update_app_subscription` (it writes changes) and `list_my_orgs`.
+
+Skills can then read your data freely while every write stays behind an explicit confirmation.
+
 ---
 
 ## Step 2 — Install a skill
+
+> **For `refresh-subscription-info`:** this skill also needs an **email-search MCP** (to find your invoices) alongside the ShiftControl MCP. Any email MCP that lists and reads messages works. If some invoices arrive as **PDF attachments** (GitHub, JumpCloud, Salesforce-billed Slack, and others), use an email MCP that can return attachment **content or a download URL** — e.g. Superhuman. The default Anthropic Gmail connector returns attachment *filenames only*, so it cannot open PDF invoices; when that happens the skill tells you and asks you to provide the figure instead.
 
 ### Claude Code (filesystem)
 
@@ -135,12 +146,18 @@ cd .. && rm -rf _tmp
 
 Claude Code discovers it on the next session.
 
-### claude.ai (web)
+### Claude Desktop app (macOS / Windows) and claude.ai (web)
 
-1. Download the skill zip from the [latest release](https://github.com/ShiftControl-io/skills/releases/latest)
-2. Open **claude.ai → Settings → Features → Skills**
-3. Click **Upload skill** and select the zip
-4. The skill is available immediately for new conversations
+**The same zip upload works for both the Claude Desktop app and the Claude website** — this is the easiest path for most people, and it's the right one if you're on the Mac or Windows desktop app.
+
+1. Download the skill zip from the [latest release](https://github.com/ShiftControl-io/skills/releases/latest).
+2. Open the skills panel:
+   - **Claude Desktop app:** **Customize → Skills**
+   - **claude.ai (web):** **Customize → Skills** (also under **Settings → Features → Skills**)
+3. Click **Upload skill**, or just **drag and drop the zip** onto the panel.
+4. The skill is available immediately for new conversations.
+
+Note: Step 1's Claude Desktop instructions connect the MCP *server*; this step adds the *skill* itself. They're two separate installs — you need both.
 
 ### Cursor / Windsurf / Cline (rules-based tools)
 
