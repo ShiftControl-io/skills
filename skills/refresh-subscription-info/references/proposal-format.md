@@ -32,7 +32,7 @@ Rules:
 - Use a blank line between apps for scannability.
 - Right-align the arrow column when reasonable; not required if it complicates rendering.
 - Show `(not set)` for currently-null fields rather than blanks.
-- Format costs with **currency symbol AND unit**: `$8.00/user/month`, `$300.00/year flat`, `€50.00/user/year`.
+- Format costs with **currency symbol AND unit**, using "per user" or "flat fee" (never bare "flat"): `$8.00/user/month`, `$300.00/year flat fee`, `€50.00/user/year`.
 - Format dates as ISO 8601 date only: `2026-03-15`.
 - Include the `notes update:` line on every block — showing the user that the change will also write a short context note to the app is part of "no surprises". The phrasing `notes update` (not `notes added`) is intentional: the skill replaces its own previous note line rather than accumulating new ones every time it runs.
 - For reseller / parent-billed invoices, include the source in the note string: `"Updated from Slack invoice dated 2026-03-15 (billed via Salesforce)"`.
@@ -57,6 +57,38 @@ Skipped or uncertain (3):
   - "Atlassian" invoice from 2026-03-08 — could match Jira or Confluence; please clarify.
   - "Adobe Creative Cloud" invoice from 2026-02-28 — no app in ShiftControl matches; should I help you add it?
   - "Generic Vendor LLC" invoice from 2026-03-10 — couldn't extract per-unit cost from the body.
+```
+
+## Needs-cost-structure blocks (data-integrity audit)
+
+From the Step 1 audit: apps that already have a cost recorded but a **blank `costStructure`**. These don't count toward spend in ShiftControl until fixed, so surface them even when you found no new invoice:
+
+```
+Needs cost structure — not counted in spend until fixed (2):
+  - Documenso: cost $9.00 recorded, structure blank — per user or flat fee (per contract)?
+  - Aspire: cost $5.00 recorded, structure blank — per user or flat fee (per contract)?
+```
+
+Where an invoice or the user tells you the structure, fold the fix into that app's normal proposal block instead of listing it here.
+
+## Archive-candidate blocks
+
+Apps the user has indicated they no longer pay for. The skill NEVER archives — it only flags:
+
+```
+Archive candidates (1):
+  - ChatGPT — you mentioned you stopped paying. Archive it in ShiftControl → Apps if so. (I won't change it.)
+```
+
+## No-invoice / manual-entry blocks
+
+Apps with no findable email invoice (portal/card billing, mailbox you can't see, or a PDF you couldn't read). Offer manual entry rather than guessing or zeroing:
+
+```
+No invoice found — reply with the cost and I'll record it (3):
+  - HReasily — likely billed via portal, not email.
+  - logo.dev — may be billed to a mailbox I can't access.
+  - GitHub — amount is in a PDF this email connector won't open; paste it or forward the invoice.
 ```
 
 ## Truncation
