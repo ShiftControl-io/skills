@@ -213,14 +213,16 @@ Credit Memos and payment-received notifications, even for direct consumption: do
 - **Currency conversion** — invoice in USD but user's org defaults to EUR/SGD. Surface the invoice currency; don't auto-convert. Let the user decide whether to store in invoice currency or org default.
 - **PDF invoices** — many SaaS vendors send the invoice details as a PDF attachment with only a short summary in the email body ("Your invoice is attached"). Whether you can read the PDF depends on the email MCP's attachment capability, which varies a lot — **check it before assuming**:
   - **Returns attachment content or a download URL** (e.g. Superhuman's `get_attachment`, which returns a short-lived download URL for PDFs): fetch it, read the PDF (most assistants read PDFs natively; if you get a URL, fetch and parse it), and extract the same fields (vendor, amounts, service period, seats, plan tier) as you would from an inline body. This is the path that lets you read GitHub/JumpCloud/Salesforce-billed PDF invoices.
-  - **Returns attachment filenames only** — the default Anthropic Gmail connector does this: it gives you the filename but not the bytes or a link. In this case you genuinely **cannot** read the PDF. Do not guess the amount. Tell the user which invoices are affected and offer the manual-entry path, or suggest connecting an attachment-capable email tool (Superhuman is verified to work). This is not a skill bug — it's a connector limitation.
+  - **No attachment tool, but a raw / full-MIME message format** — the Anthropic Gmail connector's `messageFormat: "RAW"`. It exposes no attachment tool at all, but RAW returns the entire message with the PDF inline, so the invoice **is** readable. It is size-gated and needs careful decoding; follow [attachment-extraction.md](attachment-extraction.md). (This corrects earlier guidance in this file, which said the Gmail connector could not open PDF invoices. It can.)
+  - **Neither** — filenames only, no raw format. Here you genuinely cannot read the PDF. Do not guess the amount. Tell the user which invoices are affected and offer the manual-entry path.
   - Note: often the figure is *also* in the email body (GitHub receipts list the amount in the body text), so always parse the body thoroughly first; fall to the PDF only when the body lacks the numbers.
 - **Web-hosted invoices** — "Click here to view your invoice" with the actual numbers behind a link rather than in the body or attachment. **Ask the user before following the link** — most will say yes, some prefer not to follow links from their inbox. Phrasing: *"I found invoices from <vendor> where the details are behind a 'view invoice' link — should I follow those links to extract the cost?"* If the user agrees and your assistant has a web-fetch capability, fetch and parse. Otherwise mark uncertain.
 
 ## What this skill does NOT do (yet)
 
-These are explicitly out-of-scope for v0.1.0 and tracked for v0.2.0+:
+Xero landed in v0.3.0 — see [xero-bills.md](xero-bills.md). Still out of scope:
 
-- Integrate with Xero, QuickBooks, Brex, Ramp, or other finance systems (v0.2.0 adds these as alternate sources alongside email)
+- QuickBooks, Brex, Ramp, or any accounting source other than Xero
 - Multi-currency normalization (skill surfaces the invoice currency; user decides whether to store in invoice currency or org default)
 - Automatic vendor → ShiftControl-app addition (skill never creates apps from invoices; only updates existing ones)
+- OCR of scanned PDF invoices (a PDF that extracts to whitespace is marked uncertain)

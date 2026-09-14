@@ -4,7 +4,8 @@
 
 ## What you can do today
 
-- **Stop chasing invoices through your inbox.** Ask your AI to *"refresh my subscription info from my recent invoices"* and it'll search your email, match each invoice to an app in ShiftControl, show you exactly what would change (e.g. Slack $8/user/mo → $7/user/mo, contract through 2027-03-15), and update only what you approve. Each change records a short note in the app explaining where the new values came from.
+- **Stop chasing invoices through your inbox.** Ask your AI to *"refresh my subscription info from my recent invoices"* and it'll search your email **and your Xero bills**, match each invoice to an app in ShiftControl, show you exactly what would change (e.g. Slack $8/user/mo → $7/user/mo, contract through 2027-03-15), and update only what you approve. Each change records a short note in the app explaining where the new values came from.
+- **Ask someone else to find them.** If the invoices live in the bookkeeper's Xero or finance's inbox, your AI writes a request they can run themselves. They send back one file; you review the proposed changes as usual. They never need a ShiftControl login, and nothing is written on their side.
 - **Use the AI tool you already use.** Claude Desktop, Claude Code, Cursor, Windsurf, Cline, Continue.dev, ChatGPT, Gemini — see [INSTALL.md](INSTALL.md) for your tool.
 - **Sign in once.** Connecting takes a single OAuth click through your normal ShiftControl login. Your AI gets exactly the permissions you already have — nothing more.
 
@@ -18,7 +19,7 @@
 
 | Skill | What it does | Status |
 |---|---|---|
-| [`refresh-subscription-info`](skills/refresh-subscription-info/) | Finds recent SaaS invoices in the user's email and proposes ShiftControl subscription updates (cost, billing frequency, contract terms, notes). | v0.1.0 |
+| [`refresh-subscription-info`](skills/refresh-subscription-info/) | Finds SaaS invoices — in email, in Xero bills, or in a file a colleague collected — and proposes ShiftControl subscription updates (cost, billing frequency, contract terms, notes). | v0.3.0 |
 
 More coming. See [open skill proposals](https://github.com/ShiftControl-io/skills/issues?q=label%3Askill-request).
 

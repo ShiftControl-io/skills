@@ -115,6 +115,21 @@ Any MCP client that supports remote OAuth 2.1 servers with Dynamic Client Regist
 - **Endpoint:** `https://mcp.shiftcontrol.io/mcp`
 - **OAuth discovery:** `https://mcp.shiftcontrol.io/.well-known/oauth-authorization-server`
 
+### Optional — connect Xero (for `refresh-subscription-info`)
+
+If you use Xero, connecting it gives the subscription skill a much cleaner source than email: bills are already normalised, deduplicated, and attached to a supplier contact. It's read-only as far as the skill is concerned — nothing is ever written back to Xero.
+
+Point your client at the remote MCP server `https://mcp.xero.com/mcp`, exactly the way you added ShiftControl above:
+
+```bash
+# Claude Code
+claude mcp add xero --transport http https://mcp.xero.com/mcp
+```
+
+For Claude Desktop / claude.ai, add it as a custom connector (it also appears in the built-in connector directory on some plans). For Cursor, Windsurf, Cline and Continue.dev, add it as another MCP server with that URL. Authorise in the browser on first use — Xero authorises **per organisation**, so pick the right entity if you run several.
+
+Prefer to run it yourself? The official self-hosted server is `npx -y @xeroapi/xero-mcp-server@latest`, which uses Xero Custom Connection credentials instead of browser OAuth.
+
 ### Recommended permissions
 
 When your client asks how the ShiftControl tools may run, a good default is:
@@ -128,7 +143,11 @@ Skills can then read your data freely while every write stays behind an explicit
 
 ## Step 2 — Install a skill
 
-> **For `refresh-subscription-info`:** this skill also needs an **email-search MCP** (to find your invoices) alongside the ShiftControl MCP. Any email MCP that lists and reads messages works. If some invoices arrive as **PDF attachments** (GitHub, JumpCloud, Salesforce-billed Slack, and others), use an email MCP that can return attachment **content or a download URL** — e.g. Superhuman. The default Anthropic Gmail connector returns attachment *filenames only*, so it cannot open PDF invoices; when that happens the skill tells you and asks you to provide the figure instead.
+> **For `refresh-subscription-info`:** this skill needs at least one **invoice source** alongside the ShiftControl MCP — your email, your Xero, or a collection file someone else produced.
+>
+> - **Email.** Any MCP that lists and reads messages. Many invoices (GitHub, JumpCloud, Salesforce-billed Slack) put the figures in a **PDF attachment**: an email MCP that returns attachment content or a download URL reads those directly, and the Anthropic Gmail connector reaches them through its raw-message format. Only a connector offering neither leaves you typing the figure in by hand.
+> - **Xero** (optional, recommended). Cleaner than email for amounts and dates — see the section above. The skill asks whether you use Xero even if it isn't connected.
+> - **Neither, because the invoices aren't yours to see.** The skill can write a request for whoever does hold them — a bookkeeper, finance, an external accountant — who runs it against their own sources and sends back a file. They never need ShiftControl access, and it never writes anything on their side.
 
 ### Claude Code (filesystem)
 
