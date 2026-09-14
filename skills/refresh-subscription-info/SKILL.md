@@ -46,8 +46,8 @@ Any MCP that lists and reads messages: Gmail (Anthropic publishes one), Outlook,
 
 **Then check the attachment tier**, because a large share of invoices put the figures in a PDF and leave the body nearly empty:
 
-1. **A dedicated attachment tool** returning content or a download URL (e.g. Superhuman's `get_attachment`) — best case, read PDFs directly.
-2. **No attachment tool, but a raw/full-MIME message format** — the Gmail connector's `messageFormat: "RAW"` returns the whole message with the attachment inline. PDFs are readable, size-gated. See [references/attachment-extraction.md](references/attachment-extraction.md).
+1. **A dedicated attachment tool** returning content or a download URL (e.g. Superhuman's `get_attachment`) — best case, read PDFs directly, at whatever size your assistant handles natively. No special limit applies on this path.
+2. **No attachment tool, but a raw/full-MIME message format** — the Gmail connector's `messageFormat: "RAW"` returns the whole message with the attachment inline. PDFs are readable, but size-gated: the response lands in your context window, so the ceiling is arithmetic rather than policy. See [references/attachment-extraction.md](references/attachment-extraction.md).
 3. **Neither** — filenames only. You cannot read PDF invoices; say so up front and use manual entry for those.
 
 An attachment **ID** in a message payload is not evidence you can fetch the attachment. Check for a tool that accepts one.
