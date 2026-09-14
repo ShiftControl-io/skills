@@ -51,15 +51,17 @@ Around 30 records per page on the hosted connector. Keep paging until you have t
 
 ### 3. Zero-total bills are accounting entries, not free subscriptions
 
-This one bites hard. In a real tenant, every bill in the connector's default window came back with a total of **0.00** and a status of **PAID**, with references shaped like `Prepayment - Annual - INV<number> - <period>`.
+This one bites hard, and the fix is not the obvious one. Where an organisation amortises annual prepayments, a large share of bills come back with a header total of **0.00** and a status of **PAID**, with references shaped like `Prepayment - Annual - INV<number> - <period>`.
 
-The likely explanation — offered as a hypothesis, not something this skill has verified — is that these are prepayment amortisation or allocation entries posted against the supplier contact, with the vendor's real invoice reference embedded in the bill number. The actual cash-cost bills sit outside the default window.
+They are not empty. Each is a paired double entry: one line posting the month's share to an expense account, and an equal negative line releasing it from a prepayment asset account. The two net to zero at the header, which is why the header is worthless and **the line items are not**.
 
-Whatever the accounting reason, the rule is absolute:
+Two rules, and you need both:
 
-> **Never derive a subscription cost from a zero-total bill, and never treat one as evidence of a free plan.**
+> **Never derive a subscription cost from a bill's header total when that total is 0.00, and never treat a zero total as evidence of a free plan.**
+>
+> **Do read the line items anyway.** On an amortisation bill the positive line amount is the vendor's cost for that period, which is often exactly the monthly figure you want.
 
-This is the same rule the skill already applies to a missing email invoice, for the same reason: absence of a charge in one view is not evidence of absence of a charge. When you see a run of zero-total bills, widen the date window, look for the non-zero originals, and if you cannot find them say so — *"every <Vendor> bill in Xero for this period is a 0.00 allocation entry; the real invoices are outside the window or posted differently. Worth checking with whoever does your books before I record anything."*
+So when you meet a run of zero-total bills, request line items rather than skipping the vendor. Take the positive line, note that it is an amortised period share rather than the invoiced amount, and say so in the proposal. If the line items are also uninformative, widen the window to find the original non-zero bill, and if you cannot, tell the user plainly — *"every <Vendor> bill in this period is a 0.00 amortisation entry; I can read the monthly share off the line items, but the original invoice is outside the window. Worth confirming with whoever does your books."*
 
 ### 4. A bill total alone never establishes cost structure
 
@@ -67,7 +69,7 @@ A bill for $250.00 with no line-item breakdown is **not** evidence of a flat fee
 
 Resolve in this order:
 
-1. **Line items.** Request them where the tool supports it. A line with a quantity of 50 and a unit amount of 5.00 gives you both `costStructure: user` and the seat count directly.
+1. **Line items — and read the description, not just the numbers.** Request them where the tool supports it. A line with a quantity of 50 and a unit amount of 5.00 gives you `costStructure: user` and the seat count directly. **But do not trust `quantity` on its own.** On amortisation and journal-style bills the quantity is `1.0` on every line regardless of seats, and the real detail sits in the free-text description: `Team Plan Annual (2 seats) - Amortisation (Jul 2026)` carries the plan name, the seat count and the period, none of which appear in a numeric field. Parse the description for seat and plan language before concluding the record is silent on structure. A quantity of `1.0` means "one line", not "one seat".
 2. **The matching email invoice.** The vendor's own invoice usually states seats and plan.
 3. **Ask the user.** *"Xero shows $250/month to <Vendor> but no per-seat breakdown — is that per user or a flat fee (per contract)?"*
 
@@ -94,6 +96,16 @@ Their **absence proves nothing.** In a real tenant this returned empty across th
 
 **Aged payables** is a fast way to see which suppliers currently have outstanding amounts. It's a triage aid, not a source of subscription figures.
 
+### Attachments: detectable, not downloadable
+
+The vendor's own PDF is frequently attached to the bill in Xero, and it is the best single source of seats, plan tier and contract dates. **You cannot fetch it.** The hosted connector exposes fifteen tools and none of them retrieves a file, and the self-hosted official server exposes no attachment tool either. Xero's REST API has an attachments endpoint, so the bytes exist; no MCP server currently in the wild hands them over.
+
+What you *can* do is detect one. The hosted connector returns a `has_attachments` flag — but **only in detailed mode**, so you must request line items to see it. Use it to tell the user something precise instead of something vague:
+
+> <Vendor>'s bill in Xero has the original invoice attached, but no Xero tool can fetch an attachment. If that invoice also came to your inbox I can read it there, otherwise open the bill in Xero and paste the seat count.
+
+Treat `has_attachments: true` on a vendor whose structure you couldn't resolve as a strong hint to go looking in email for the same invoice.
+
 ### Credit notes
 
 Informational only, exactly like their email equivalents. A credit note adjusts a balance; it is not a change in per-unit price. Surface it, never propose from it.
@@ -115,7 +127,7 @@ When both sources cover the same vendor in the window, don't pick one — use ea
 | Invoice date | Xero | Normalised and unambiguous. |
 | Billing frequency | Xero (interval between bills, or a repeating template) | Bill history over 18 months shows cadence directly. |
 | Cost structure | Xero line items → email → ask | See trap 4. |
-| Total seats | Email or PDF | Rarely in the accounting record. |
+| Total seats | Xero line-item description, else email or PDF | Often present as text ("Team Plan Annual (2 seats)") even when no numeric field carries it. |
 | Plan / tier | Email or PDF | Not an accounting concept. |
 | Contract end date | Email or PDF | Not an accounting concept. |
 
@@ -150,6 +162,9 @@ Two things to tell them regardless of environment: the connection is read-only f
 - ❌ Deriving a cost from a zero-total bill, or reading a run of them as "these apps are free now".
 - ❌ Recording the tax-inclusive total as the subscription cost.
 - ❌ Inferring `costStructure: flat` from a bill with no line items.
+- ❌ Reading `quantity` as a seat count. On journal-style bills it is `1.0` regardless; the seats are in the description text.
+- ❌ Skipping a zero-total bill's line items. The header nets to zero; the lines carry the period cost.
+- ❌ Promising the user you can open a PDF attached to a Xero bill. You can see that it exists; you cannot fetch it.
 - ❌ Inferring "no recurring subscriptions" from an empty repeating-bills result.
 - ❌ Converting currency. Surface the bill's own currency and let the user decide.
 - ❌ Proposing from a `DRAFT` or `VOIDED` bill.

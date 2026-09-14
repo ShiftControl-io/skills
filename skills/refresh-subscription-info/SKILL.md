@@ -116,8 +116,9 @@ Read the **accounts-payable bills** (`ACCPAY`). Full procedure, both server shap
 
 - **Pass an explicit start date.** Xero bill tools default to roughly the last month; an annually-billed vendor will show nothing and look like "no bill found".
 - **Page through the results.** Around 30 per page; the first page is rarely the whole window.
-- **Never derive a cost from a zero-total bill.** Zero-total bills are accounting entries (prepayment allocation and similar), not free subscriptions — and never evidence of a free plan.
-- **Never infer cost structure from a bill total.** $250 with no line items is equally consistent with a flat fee and 50 seats at $5. Get it from line items, from the email invoice, or by asking.
+- **Never derive a cost from a zero-total bill's header — but do read its line items.** A zero total usually means a paired amortisation entry, not a free subscription. The header nets to zero while the positive line carries the real period cost. Always request line items; never read a zero total as a free plan.
+- **Never infer cost structure from a bill total, and never read `quantity` as a seat count.** $250 with no line items is equally consistent with a flat fee and 50 seats at $5, and on journal-style bills the quantity is `1.0` on every line. Seats and plan are often in the line-item *description* text. Failing that: the email invoice, or ask.
+- **You can see that a Xero bill has an attachment; you cannot download it.** No MCP server exposes a file-fetch tool. Use the flag to send yourself to the same invoice in email.
 
 Also: use the **tax-exclusive subtotal**, not the tax-inclusive total. ShiftControl records the subscription price; GST/VAT is a tax position, not a price change.
 
