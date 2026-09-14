@@ -88,7 +88,7 @@ Apps with no findable email invoice (portal/card billing, mailbox you can't see,
 No invoice found — reply with the cost and I'll record it (3):
   - HReasily — likely billed via portal, not email.
   - logo.dev — may be billed to a mailbox I can't access.
-  - GitHub — amount is in a PDF this email connector won't open; paste it or forward the invoice.
+  - GitHub — amount is in a PDF attachment too large to open safely; paste it or forward the invoice.
 ```
 
 ## Truncation
