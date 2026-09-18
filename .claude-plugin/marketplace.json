@@ -13,7 +13,7 @@
       "displayName": "ShiftControl",
       "source": "./",
       "description": "Run ShiftControl from your AI assistant: apps, groups, teams, people and subscription records, with every change proposed for your approval. Requires the ShiftControl MCP server.",
-      "version": "0.4.0",
+      "version": "0.5.0",
       "author": {
         "name": "ShiftControl",
         "email": "support@shiftcontrol.io",

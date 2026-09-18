@@ -11,6 +11,8 @@ on:
     branches: [main]
     paths:
       - 'skills/**'
+      - '.claude-plugin/**'
+      - 'VERSION'
       - '.github/workflows/validate-skills.yaml'
 
 jobs:
@@ -19,10 +21,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Pinned and checksum-verified. The previous `latest` URL meant every run
+      # executed whatever upstream had published most recently, unverified.
       - name: Install yq
+        env:
+          YQ_VERSION: v4.53.6
+          YQ_SHA256: c5f056448f973ae7d39b5401949648a78f2dc1947d6a8eb65be60d5c504b9385
         run: |
-          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
-          sudo chmod +x /usr/local/bin/yq
+          wget -qO /tmp/yq "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64"
+          echo "${YQ_SHA256}  /tmp/yq" | sha256sum -c -
+          sudo install -m 0755 /tmp/yq /usr/local/bin/yq
 
       - name: Validate every SKILL.md
         run: |
@@ -90,8 +98,10 @@ jobs:
           set -e
           fail=0
           version=$(tr -d '[:space:]' < VERSION)
+          mp=.claude-plugin/marketplace.json
+          pl=.claude-plugin/plugin.json
 
-          for f in .claude-plugin/marketplace.json .claude-plugin/plugin.json; do
+          for f in "$mp" "$pl"; do
             if ! jq empty "$f" 2>/dev/null; then
               echo "::error file=$f::not valid JSON"
               fail=1
@@ -99,18 +109,34 @@ jobs:
           done
           [ $fail -eq 0 ] || exit 1
 
+          # jq empty proves the file parses and nothing more. These assert the
+          # fields an install actually consumes, so a manifest that drops one
+          # fails here rather than in a customer's client.
+          [ -n "$(jq -r '.name // ""' "$mp")" ] || { echo "::error file=$mp::missing 'name'"; fail=1; }
+          [ -n "$(jq -r '.owner.name // ""' "$mp")" ] || { echo "::error file=$mp::missing 'owner.name'"; fail=1; }
+          [ "$(jq '.plugins | length' "$mp")" -ge 1 ] || { echo "::error file=$mp::lists no plugins"; fail=1; }
+          incomplete=$(jq '[.plugins[] | select((.name // "") == "" or .source == null or (.version // "") == "")] | length' "$mp")
+          [ "$incomplete" -eq 0 ] || { echo "::error file=$mp::$incomplete plugin entries miss name, source or version"; fail=1; }
+          [ -n "$(jq -r '.name // ""' "$pl")" ] || { echo "::error file=$pl::missing 'name'"; fail=1; }
+
           # The repo is its own single plugin: the marketplace entry's source is
           # the repo root, so plugin.json and marketplace.json must agree with
           # each other and with VERSION, or installs pin a stale release.
-          plugin_name=$(jq -r '.name' .claude-plugin/plugin.json)
-          entry_name=$(jq -r '.plugins[0].name' .claude-plugin/marketplace.json)
+          plugin_name=$(jq -r '.name' "$pl")
+          entry_name=$(jq -r '.plugins[0].name' "$mp")
           if [ "$plugin_name" != "$entry_name" ]; then
             echo "::error::plugin.json name '$plugin_name' != marketplace entry name '$entry_name'"
             fail=1
           fi
 
-          for pair in "plugin.json:$(jq -r '.version' .claude-plugin/plugin.json)" \
-                      "marketplace.json:$(jq -r '.plugins[0].version' .claude-plugin/marketplace.json)"; do
+          entry_source=$(jq -r '.plugins[0].source' "$mp")
+          if [ "$entry_source" != "./" ]; then
+            echo "::error file=$mp::plugin source is '$entry_source'; this repo publishes itself, so it must be './'"
+            fail=1
+          fi
+
+          for pair in "plugin.json:$(jq -r '.version' "$pl")" \
+                      "marketplace.json:$(jq -r '.plugins[0].version' "$mp")"; do
             file=${pair%%:*}
             got=${pair#*:}
             if [ "$got" != "$version" ]; then
