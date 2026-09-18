@@ -84,3 +84,45 @@ jobs:
             echo "::endgroup::"
           done
           exit $fail
+
+      - name: Validate plugin manifests
+        run: |
+          set -e
+          fail=0
+          version=$(tr -d '[:space:]' < VERSION)
+
+          for f in .claude-plugin/marketplace.json .claude-plugin/plugin.json; do
+            if ! jq empty "$f" 2>/dev/null; then
+              echo "::error file=$f::not valid JSON"
+              fail=1
+            fi
+          done
+          [ $fail -eq 0 ] || exit 1
+
+          # The repo is its own single plugin: the marketplace entry's source is
+          # the repo root, so plugin.json and marketplace.json must agree with
+          # each other and with VERSION, or installs pin a stale release.
+          plugin_name=$(jq -r '.name' .claude-plugin/plugin.json)
+          entry_name=$(jq -r '.plugins[0].name' .claude-plugin/marketplace.json)
+          if [ "$plugin_name" != "$entry_name" ]; then
+            echo "::error::plugin.json name '$plugin_name' != marketplace entry name '$entry_name'"
+            fail=1
+          fi
+
+          for pair in "plugin.json:$(jq -r '.version' .claude-plugin/plugin.json)" \
+                      "marketplace.json:$(jq -r '.plugins[0].version' .claude-plugin/marketplace.json)"; do
+            file=${pair%%:*}
+            got=${pair#*:}
+            if [ "$got" != "$version" ]; then
+              echo "::error::$file version '$got' does not match VERSION '$version' — bump both in the same PR"
+              fail=1
+            fi
+          done
+
+          # Every skill directory must sit where the plugin loader looks for it.
+          for dir in skills/*/; do
+            [ -f "${dir}SKILL.md" ] || { echo "::error::${dir} has no SKILL.md"; fail=1; }
+          done
+
+          [ $fail -eq 0 ] && echo "OK: manifests agree, version $version"
+          exit $fail

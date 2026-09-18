@@ -41,6 +41,8 @@ Other signing options (GPG, S/MIME) work too. See [GitHub's signing guide](https
 5. If your skill needs new MCP tools that don't exist yet on `mcp.shiftcontrol.io`, file an issue (or a PR on the MCP server) first.
 6. Open a PR. CI validates frontmatter and signed commits. A CODEOWNER reviews.
 
+Nothing needs adding to `.claude-plugin/`. The repo is published as a single Claude plugin whose root is the repo root, so every folder under `skills/` is picked up automatically.
+
 ## Editing an existing skill
 
 Same flow. Bump the version when behavior changes meaningfully (new MCP tool dependency, new workflow step, breaking change to the proposal format). Versions follow [SemVer](https://semver.org).
@@ -57,6 +59,7 @@ Same flow. Bump the version when behavior changes meaningfully (new MCP tool dep
   5. Creates a GitHub release with auto-generated notes from the commit history and attaches the zips
 - Tags are `vMAJOR.MINOR.PATCH` (`v0.1.0`, `v0.2.0`, etc.) per [SemVer](https://semver.org). Per-skill versions live in the SKILL.md frontmatter for the moment; repo-level VERSION is the release coordinator.
 - The release workflow only fires when `VERSION` itself changes — skill edits without a version bump land on `main` without producing a release. Bump `VERSION` deliberately.
+- A `VERSION` bump also bumps `version` in `.claude-plugin/plugin.json` and in the plugin entry in `.claude-plugin/marketplace.json`, in the same PR. Claude Code treats the marketplace entry's `version` as a pin: leave it behind and installed plugins never see the new release. `validate-skills.yaml` fails the PR if the three disagree.
 
 ## Code of conduct
 

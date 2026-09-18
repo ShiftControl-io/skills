@@ -12,7 +12,7 @@
 ## Quick start
 
 1. **Connect your AI to ShiftControl** — one-time MCP server install. [INSTALL.md](INSTALL.md) has step-by-step for every supported AI tool.
-2. **Install a skill** — copy a workflow from the catalog below into your AI assistant. Claude surfaces (Desktop / Code / claude.ai) install natively; Cursor / Windsurf / ChatGPT accept the skill as a rule or system prompt.
+2. **Install the skills** — in Claude, add this repo as a plugin marketplace and install **ShiftControl**. Everywhere else, `npx skills add ShiftControl-io/skills`. Zip downloads and copy-paste still work; [INSTALL.md](INSTALL.md) has every route.
 3. **Just ask.** *"Refresh my ShiftControl subscriptions from my recent invoices."* Your AI follows the skill, calls ShiftControl on your behalf, shows you what would change, and waits for your green light.
 
 ## Available skills
@@ -25,7 +25,16 @@ More coming. See [open skill proposals](https://github.com/ShiftControl-io/skill
 
 ## How skills work
 
-Anthropic's [Claude Skills](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview) format is the source of truth: a folder containing a `SKILL.md` with YAML frontmatter (`name`, `description`) and instructions in markdown. Anthropic surfaces (Claude Desktop, Claude Code, claude.ai, the Claude API) load skills natively. For other AI tools (Cursor, Windsurf, etc.), the `SKILL.md` content is copy-pasteable as a rule or system prompt — [INSTALL.md](INSTALL.md) has per-tool instructions.
+[Agent Skills](https://agentskills.io/specification) is the format, and it is an open one: a folder containing a `SKILL.md` with YAML frontmatter (`name`, `description`) and instructions in markdown. Claude, OpenAI Codex, Gemini CLI, Devin and Cursor all read it, and `.agents/skills/` is the shared directory convention between them.
+
+Distribution is the part every vendor still does its own way, so this repo carries all of them at once:
+
+- **Claude plugin marketplace** — `.claude-plugin/marketplace.json` makes the repo installable as one plugin in Claude Code, the Claude desktop app and claude.ai
+- **Vendor-neutral installer** — `npx skills add ShiftControl-io/skills` writes the skills into whichever directory your agent uses
+- **Git and `.agents/skills/`** — clone a skill folder straight into a repo for Devin, Codex or Gemini CLI
+- **Zip per skill** — attached to every [release](https://github.com/ShiftControl-io/skills/releases/latest) for drag-and-drop upload
+
+[INSTALL.md](INSTALL.md) has the exact command for each.
 
 Every skill in this repo follows three rules:
 

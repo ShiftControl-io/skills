@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "shiftcontrol",
+  "displayName": "ShiftControl",
+  "version": "0.4.0",
+  "description": "Manage your SaaS subscriptions, spend and records through ShiftControl. Requires the ShiftControl MCP server.",
+  "author": {
+    "name": "ShiftControl",
+    "email": "support@shiftcontrol.io",
+    "url": "https://shiftcontrol.io"
+  },
+  "homepage": "https://github.com/ShiftControl-io/skills",
+  "repository": "https://github.com/ShiftControl-io/skills",
+  "license": "Apache-2.0",
+  "keywords": [
+    "shiftcontrol",
+    "saas",
+    "subscriptions",
+    "spend",
+    "invoices",
+    "xero",
+    "mcp"
+  ]
+}

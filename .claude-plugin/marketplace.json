@@ -1,0 +1,37 @@
+{
+  "$schema": "https://code.claude.com/schemas/marketplace.json",
+  "name": "shiftcontrol-skills",
+  "owner": {
+    "name": "ShiftControl",
+    "email": "support@shiftcontrol.io",
+    "url": "https://shiftcontrol.io"
+  },
+  "description": "Skills that let your AI assistant manage your SaaS through ShiftControl",
+  "plugins": [
+    {
+      "name": "shiftcontrol",
+      "displayName": "ShiftControl",
+      "source": "./",
+      "description": "Manage your SaaS subscriptions, spend and records through ShiftControl. Requires the ShiftControl MCP server.",
+      "version": "0.4.0",
+      "author": {
+        "name": "ShiftControl",
+        "email": "support@shiftcontrol.io",
+        "url": "https://shiftcontrol.io"
+      },
+      "homepage": "https://github.com/ShiftControl-io/skills",
+      "repository": "https://github.com/ShiftControl-io/skills",
+      "license": "Apache-2.0",
+      "category": "integrations",
+      "keywords": [
+        "shiftcontrol",
+        "saas",
+        "subscriptions",
+        "spend",
+        "invoices",
+        "xero",
+        "mcp"
+      ]
+    }
+  ]
+}
