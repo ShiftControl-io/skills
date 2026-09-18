@@ -38,6 +38,7 @@ jobs:
           fail=0
           for f in skills/*/SKILL.md; do
             echo "::group::Validating $f"
+            before=$fail
 
             # Extract YAML frontmatter (between the first two --- lines)
             fm=$(awk '/^---$/{c++; if(c==2) exit; next} c==1' "$f")
@@ -88,7 +89,28 @@ jobs:
               fail=1
             fi
 
-            echo "OK: name=$name, description length=${#description}"
+            # Every skill carries its own SemVer in metadata.version. It is what
+            # names the release zip and what the README catalog table shows, so
+            # the three have to agree or a customer cannot tell what they have.
+            skill_version=$(echo "$fm" | yq -r '.metadata.version // ""')
+            if [ -z "$skill_version" ]; then
+              echo "::error file=$f::frontmatter missing 'metadata.version'"
+              fail=1
+            elif ! echo "$skill_version" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?$'; then
+              echo "::error file=$f::'metadata.version' '$skill_version' is not valid SemVer"
+              fail=1
+            else
+              row=$(grep -F "skills/$name/" README.md | head -1)
+              if [ -z "$row" ]; then
+                echo "::error::README.md has no catalog row for '$name'"
+                fail=1
+              elif ! echo "$row" | grep -q "v$skill_version"; then
+                echo "::error::README.md lists '$name' at a different version than v$skill_version"
+                fail=1
+              fi
+            fi
+
+            [ "$fail" -eq "$before" ] && echo "OK: name=$name, version=${skill_version:-unset}, description length=${#description}"
             echo "::endgroup::"
           done
           exit $fail

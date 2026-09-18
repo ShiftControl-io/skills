@@ -1,6 +1,8 @@
 ---
 name: refresh-subscription-info
 description: Reconcile ShiftControl subscription records against real invoices — from email, Xero bills, or a file collected by a colleague. Every change is proposed for approval before any write.
+metadata:
+  version: "0.3.0"
 ---
 
 # Refresh Subscription Info

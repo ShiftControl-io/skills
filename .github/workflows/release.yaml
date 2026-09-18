@@ -75,6 +75,17 @@ jobs:
           git push origin "$TAG"
           echo "✓ Pushed signed tag $TAG"
 
+      # Pinned and checksum-verified, same as the validate workflow.
+      - name: Install yq
+        if: steps.tag_check.outputs.skip == 'false'
+        env:
+          YQ_VERSION: v4.53.6
+          YQ_SHA256: c5f056448f973ae7d39b5401949648a78f2dc1947d6a8eb65be60d5c504b9385
+        run: |
+          wget -qO /tmp/yq "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64"
+          echo "${YQ_SHA256}  /tmp/yq" | sha256sum -c -
+          sudo install -m 0755 /tmp/yq /usr/local/bin/yq
+
       - name: Build per-skill zip artifacts
         if: steps.tag_check.outputs.skip == 'false'
         id: zips
@@ -83,8 +94,17 @@ jobs:
           VERSION="${{ steps.version.outputs.version }}"
           for dir in skills/*/; do
             name=$(basename "$dir")
-            ( cd skills && zip -r "/tmp/skill-zips/${name}-v${VERSION}.zip" "$name" -x '*.DS_Store' )
-            echo "✓ Built ${name}-v${VERSION}.zip"
+            # Each zip is named for the SKILL's own version, not the repo's, so
+            # a downloaded file says what it holds. validate-skills.yaml is what
+            # guarantees the field is there and is SemVer.
+            fm=$(awk '/^---$/{c++; if(c==2) exit; next} c==1' "${dir}SKILL.md")
+            skill_version=$(echo "$fm" | yq -r '.metadata.version // ""')
+            if [ -z "$skill_version" ]; then
+              echo "::error::${name} has no metadata.version; falling back to repo VERSION $VERSION"
+              skill_version="$VERSION"
+            fi
+            ( cd skills && zip -r "/tmp/skill-zips/${name}-v${skill_version}.zip" "$name" -x '*.DS_Store' )
+            echo "✓ Built ${name}-v${skill_version}.zip"
           done
           ls -la /tmp/skill-zips
 
