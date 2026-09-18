@@ -149,7 +149,76 @@ Skills can then read your data freely while every write stays behind an explicit
 > - **Xero** (optional, recommended). Cleaner than email for amounts and dates — see the section above. The skill asks whether you use Xero even if it isn't connected.
 > - **Neither, because the invoices aren't yours to see.** The skill can write a request for whoever does hold them — a bookkeeper, finance, an external accountant — who runs it against their own sources and sends back a file. They never need ShiftControl access, and it never writes anything on their side.
 
-### Claude Code (filesystem)
+### Claude Code, Claude desktop and claude.ai — the plugin (recommended)
+
+This repo is a Claude plugin marketplace, so one install gets you every skill in it, and updates arrive through the normal plugin update path.
+
+In **Claude Code**:
+
+```
+/plugin marketplace add ShiftControl-io/skills
+/plugin install shiftcontrol@shiftcontrol-skills
+```
+
+In the **Claude desktop app** or on **claude.ai**:
+
+1. Open **Customize → Plugins**
+2. In **Personal plugins**, click **+ → Add marketplace → Add from a repository**
+3. Enter `https://github.com/ShiftControl-io/skills`
+4. Install **ShiftControl**
+
+The skills then show up under **ShiftControl** when you type `/` or click **+** in a conversation. `/plugin update` (Claude Code) or the Plugins tab (desktop / web) pulls later releases.
+
+### Claude desktop app and claude.ai — zip upload
+
+No GitHub account needed, and it pins you to a published release instead of tracking `main`.
+
+1. Download the skill zip from the [latest release](https://github.com/ShiftControl-io/skills/releases/latest)
+2. Open **Customize → Skills**
+3. Click **Upload skill**, or drag the zip onto the panel
+
+The skill is available immediately in new conversations.
+
+### Codex, Cursor, Copilot, Cline, Windsurf, OpenCode and 70+ others
+
+[`skills`](https://github.com/vercel-labs/skills) is a vendor-neutral installer. It reads this repo and writes each skill into whatever directory your agent expects (`.agents/skills/`, `.claude/skills/`, and so on).
+
+```bash
+# Into the current project
+npx skills add ShiftControl-io/skills
+
+# Or user-wide, for every project
+npx skills add ShiftControl-io/skills --global
+```
+
+Useful flags: `--list` shows what the repo holds without installing anything, `--skill <name>` takes one skill, and `--agent <agent>` targets a single tool instead of every agent it detects.
+
+### Gemini CLI and Antigravity
+
+```bash
+gemini skills install https://github.com/ShiftControl-io/skills.git \
+  --path skills/refresh-subscription-info --consent
+```
+
+`--scope workspace` keeps it to the current project; the default is your user scope.
+
+### Devin, Codex and anything else reading `.agents/skills/`
+
+`.agents/skills/` is the cross-vendor convention: check a skill in there and the agent finds it when it opens the repository.
+
+```bash
+mkdir -p .agents/skills
+git clone --depth 1 --filter=blob:none --sparse https://github.com/ShiftControl-io/skills.git _tmp
+cd _tmp && git sparse-checkout set skills/refresh-subscription-info && cd ..
+mv _tmp/skills/refresh-subscription-info .agents/skills/
+rm -rf _tmp
+```
+
+Swap `.agents/skills` for `~/.agents/skills` to install it for yourself rather than for the repository.
+
+### Claude Code — manual filesystem install
+
+If you would rather not use the plugin, drop the skill folder in directly:
 
 ```bash
 # Personal scope — available across all your Claude Code projects
@@ -165,28 +234,15 @@ cd .. && rm -rf _tmp
 
 Claude Code discovers it on the next session.
 
-### Claude Desktop app (macOS / Windows) and claude.ai (web)
+### Rules-only tools (fallback)
 
-**The same zip upload works for both the Claude Desktop app and the Claude website** — this is the easiest path for most people, and it's the right one if you're on the Mac or Windows desktop app.
-
-1. Download the skill zip from the [latest release](https://github.com/ShiftControl-io/skills/releases/latest).
-2. Open the skills panel:
-   - **Claude Desktop app:** **Customize → Skills**
-   - **claude.ai (web):** **Customize → Skills** (also under **Settings → Features → Skills**)
-3. Click **Upload skill**, or just **drag and drop the zip** onto the panel.
-4. The skill is available immediately for new conversations.
-
-Note: Step 1's Claude Desktop instructions connect the MCP *server*; this step adds the *skill* itself. They're two separate installs — you need both.
-
-### Cursor / Windsurf / Cline (rules-based tools)
-
-These tools use **rules** rather than skills. Paste the SKILL.md body as a rule:
+If your tool has no skill loader, or you would rather not install anything, paste the SKILL.md body in as a rule or custom instruction. Cursor reads `SKILL.md` natively these days, so prefer the installer above there; this is the route that always works:
 
 1. Open the skill's `SKILL.md` on GitHub (use the raw view button)
 2. Copy everything below the YAML frontmatter (the `---` block)
-3. In **Cursor:** Settings → Rules → Add new rule → paste content, name it after the skill
-4. In **Windsurf:** create `.windsurfrules` in the project root and paste content
-5. In **Cline:** Settings → Custom Instructions → paste content
+3. **Cursor:** Settings → Rules → Add new rule → paste, name it after the skill
+4. **Windsurf:** create `.windsurfrules` in the project root and paste
+5. **Cline:** Settings → Custom Instructions → paste
 
 The AI follows the pasted instructions and calls the ShiftControl MCP tools from Step 1.
 

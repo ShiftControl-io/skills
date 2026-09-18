@@ -27,13 +27,17 @@ jobs:
 
       - name: Read VERSION
         id: version
+        env:
+          # Same POSIX-ERE SemVer pattern validate-skills.yaml uses, so a
+          # version that passes the PR gate cannot fail the release.
+          SEMVER: '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-((0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*))?(\+([0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*))?$'
         run: |
           VERSION=$(cat VERSION | tr -d '[:space:]')
           if [ -z "$VERSION" ]; then
             echo "::error::VERSION file is empty"
             exit 1
           fi
-          if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?$'; then
+          if ! echo "$VERSION" | grep -qE "$SEMVER"; then
             echo "::error::VERSION '$VERSION' is not valid SemVer"
             exit 1
           fi
@@ -41,18 +45,73 @@ jobs:
           echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
           echo "VERSION: $VERSION"
 
-      - name: Skip if tag already exists
+      # The RELEASE is the completion marker, not the tag. A run that dies
+      # between pushing the tag and creating the release used to be
+      # unrecoverable: every rerun saw the tag and skipped everything, leaving
+      # a tagged version with no release and no zips. Re-running now resumes.
+      - name: Decide what is left to do
         id: tag_check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if git rev-parse "${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
-            echo "Tag ${{ steps.version.outputs.tag }} already exists. Nothing to do."
+          TAG="${{ steps.version.outputs.tag }}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists. Nothing to do."
             echo "skip=true" >> "$GITHUB_OUTPUT"
           else
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            # Resuming. Build from the tagged commit, never from whatever main
+            # holds now: a retry can run long after later skill merges landed,
+            # and a zip must match the tag it ships under.
+            git -c advice.detachedHead=false checkout --detach "$TAG"
+            tagged_version=$(tr -d '[:space:]' < VERSION)
+            if [ "$tagged_version" != "${{ steps.version.outputs.version }}" ]; then
+              echo "::error::$TAG holds VERSION '$tagged_version', expected '${{ steps.version.outputs.version }}'"
+              exit 1
+            fi
+            echo "Tag $TAG already exists at $(git rev-parse --short HEAD); reusing it and building from it."
+            echo "tag_exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag_exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Pinned and checksum-verified, same as the validate workflow.
+      - name: Install yq
+        if: steps.tag_check.outputs.skip == 'false'
+        env:
+          YQ_VERSION: v4.53.6
+          YQ_SHA256: c5f056448f973ae7d39b5401949648a78f2dc1947d6a8eb65be60d5c504b9385
+        run: |
+          wget -qO /tmp/yq "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64"
+          echo "${YQ_SHA256}  /tmp/yq" | sha256sum -c -
+          sudo install -m 0755 /tmp/yq /usr/local/bin/yq
+
+      - name: Build per-skill zip artifacts
+        if: steps.tag_check.outputs.skip == 'false'
+        id: zips
+        run: |
+          mkdir -p /tmp/skill-zips
+          VERSION="${{ steps.version.outputs.version }}"
+          for dir in skills/*/; do
+            name=$(basename "$dir")
+            # Each zip is named for the SKILL's own version, not the repo's, so
+            # a downloaded file says what it holds. validate-skills.yaml is what
+            # guarantees the field is there and is SemVer.
+            fm=$(awk '/^---$/{c++; if(c==2) exit; next} c==1' "${dir}SKILL.md")
+            skill_version=$(echo "$fm" | yq -r '.metadata.version // ""')
+            if [ -z "$skill_version" ]; then
+              echo "::error::${name} has no metadata.version; falling back to repo VERSION $VERSION"
+              skill_version="$VERSION"
+            fi
+            ( cd skills && zip -r "/tmp/skill-zips/${name}-v${skill_version}.zip" "$name" -x '*.DS_Store' )
+            echo "✓ Built ${name}-v${skill_version}.zip"
+          done
+          ls -la /tmp/skill-zips
 
       - name: Import signing GPG key
-        if: steps.tag_check.outputs.skip == 'false'
+        if: steps.tag_check.outputs.skip == 'false' && steps.tag_check.outputs.tag_exists == 'false'
         id: import_gpg
         uses: crazy-max/ghaction-import-gpg@v6
         with:
@@ -63,7 +122,7 @@ jobs:
           git_tag_gpgsign: true
 
       - name: Create and push signed tag
-        if: steps.tag_check.outputs.skip == 'false'
+        if: steps.tag_check.outputs.skip == 'false' && steps.tag_check.outputs.tag_exists == 'false'
         env:
           GIT_AUTHOR_NAME: ${{ steps.import_gpg.outputs.name }}
           GIT_AUTHOR_EMAIL: ${{ steps.import_gpg.outputs.email }}
@@ -74,19 +133,6 @@ jobs:
           git tag -s "$TAG" -m "Release $TAG"
           git push origin "$TAG"
           echo "✓ Pushed signed tag $TAG"
-
-      - name: Build per-skill zip artifacts
-        if: steps.tag_check.outputs.skip == 'false'
-        id: zips
-        run: |
-          mkdir -p /tmp/skill-zips
-          VERSION="${{ steps.version.outputs.version }}"
-          for dir in skills/*/; do
-            name=$(basename "$dir")
-            ( cd skills && zip -r "/tmp/skill-zips/${name}-v${VERSION}.zip" "$name" -x '*.DS_Store' )
-            echo "✓ Built ${name}-v${VERSION}.zip"
-          done
-          ls -la /tmp/skill-zips
 
       - name: Create GitHub release with skill zips
         if: steps.tag_check.outputs.skip == 'false'

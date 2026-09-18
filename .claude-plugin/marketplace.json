@@ -1,0 +1,39 @@
+{
+  "$schema": "https://code.claude.com/schemas/marketplace.json",
+  "name": "shiftcontrol-skills",
+  "owner": {
+    "name": "ShiftControl",
+    "email": "support@shiftcontrol.io",
+    "url": "https://shiftcontrol.io"
+  },
+  "description": "Skills for managing ShiftControl with your AI assistant",
+  "plugins": [
+    {
+      "name": "shiftcontrol",
+      "displayName": "ShiftControl",
+      "source": "./",
+      "description": "Run ShiftControl from your AI assistant: apps, groups, teams, people and subscription records, with every change proposed for your approval. Requires the ShiftControl MCP server.",
+      "version": "0.5.0",
+      "author": {
+        "name": "ShiftControl",
+        "email": "support@shiftcontrol.io",
+        "url": "https://shiftcontrol.io"
+      },
+      "homepage": "https://github.com/ShiftControl-io/skills",
+      "repository": "https://github.com/ShiftControl-io/skills",
+      "license": "Apache-2.0",
+      "category": "integrations",
+      "keywords": [
+        "shiftcontrol",
+        "saas",
+        "it-management",
+        "apps",
+        "groups",
+        "access",
+        "subscriptions",
+        "spend",
+        "mcp"
+      ]
+    }
+  ]
+}
