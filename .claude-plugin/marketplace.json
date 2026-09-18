@@ -6,13 +6,13 @@
     "email": "support@shiftcontrol.io",
     "url": "https://shiftcontrol.io"
   },
-  "description": "Skills that let your AI assistant manage your SaaS through ShiftControl",
+  "description": "Skills for managing ShiftControl with your AI assistant",
   "plugins": [
     {
       "name": "shiftcontrol",
       "displayName": "ShiftControl",
       "source": "./",
-      "description": "Manage your SaaS subscriptions, spend and records through ShiftControl. Requires the ShiftControl MCP server.",
+      "description": "Run ShiftControl from your AI assistant: apps, groups, teams, people and subscription records, with every change proposed for your approval. Requires the ShiftControl MCP server.",
       "version": "0.4.0",
       "author": {
         "name": "ShiftControl",
@@ -26,10 +26,12 @@
       "keywords": [
         "shiftcontrol",
         "saas",
+        "it-management",
+        "apps",
+        "groups",
+        "access",
         "subscriptions",
         "spend",
-        "invoices",
-        "xero",
         "mcp"
       ]
     }
