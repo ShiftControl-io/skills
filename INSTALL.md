@@ -236,7 +236,7 @@ Claude Code discovers it on the next session.
 
 ### Rules-only tools (fallback)
 
-Some tools have no skill loader at all. There, paste the SKILL.md body in as a rule or custom instruction:
+If your tool has no skill loader, or you would rather not install anything, paste the SKILL.md body in as a rule or custom instruction. Cursor reads `SKILL.md` natively these days, so prefer the installer above there; this is the route that always works:
 
 1. Open the skill's `SKILL.md` on GitHub (use the raw view button)
 2. Copy everything below the YAML frontmatter (the `---` block)
