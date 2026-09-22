@@ -11,7 +11,7 @@
 
 ## Quick start
 
-1. **Connect your AI to ShiftControl** — one-time MCP server install. In Claude Code the plugin below does this for you, so you can skip straight to step 2. [INSTALL.md](INSTALL.md) has step-by-step for every other AI tool.
+1. **Connect your AI to ShiftControl** — one-time MCP server install. The Claude plugin in step 2 brings the server with it, so in Claude you can skip straight there and just approve the connection. [INSTALL.md](INSTALL.md) has step-by-step for every other AI tool.
 2. **Install the skills** — in Claude, add this repo as a plugin marketplace and install **ShiftControl**. Everywhere else, `npx skills add ShiftControl-io/skills`. Zip downloads and copy-paste still work; [INSTALL.md](INSTALL.md) has every route.
 3. **Just ask.** *"Refresh my ShiftControl subscriptions from my recent invoices."* Your AI follows the skill, calls ShiftControl on your behalf, shows you what would change, and waits for your green light.
 
@@ -29,7 +29,7 @@ More coming. See [open skill proposals](https://github.com/ShiftControl-io/skill
 
 Distribution is the part every vendor still does its own way, so this repo carries all of them at once:
 
-- **Claude plugin marketplace** — `.claude-plugin/marketplace.json` makes the repo installable as one plugin in Claude Code, the Claude desktop app and claude.ai. The plugin also declares the ShiftControl MCP server, so in Claude Code the install covers both halves
+- **Claude plugin marketplace** — `.claude-plugin/marketplace.json` makes the repo installable as one plugin in Claude Code, the Claude desktop app and claude.ai. The plugin also declares the ShiftControl MCP server, so the skills and the connection they need arrive together
 - **Vendor-neutral installer** — `npx skills add ShiftControl-io/skills` writes the skills into whichever directory your agent uses
 - **Git and `.agents/skills/`** — clone a skill folder straight into a repo for Devin, Codex or Gemini CLI
 - **Zip per skill** — attached to every [release](https://github.com/ShiftControl-io/skills/releases/latest) for drag-and-drop upload

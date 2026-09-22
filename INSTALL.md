@@ -2,7 +2,7 @@
 
 ShiftControl uses the [Model Context Protocol (MCP)](https://modelcontextprotocol.io) — an open standard for connecting AI assistants to applications. To use any of the skills in this repo, you first install the **ShiftControl MCP server**, then install the skill(s) in whichever way your AI tool supports.
 
-**In Claude Code, one step does both.** The plugin carries the server definition, so installing the plugin installs the server too. Go straight to [Step 2](#step-2--install-a-skill) and come back here only if you use a different tool.
+**The Claude plugin carries the server, so you never type the URL.** In Claude Code, installing the plugin installs the server outright. In the Claude desktop app and on claude.ai, the plugin lists ShiftControl on its **Connectors** tab and you click **Connect** once. Either way, go straight to [Step 2](#step-2--install-a-skill) and come back here only if you use a different tool.
 
 You'll sign in to ShiftControl once in your browser — the same login you use for ShiftControl itself. After that, your AI assistant works with your actual ShiftControl data using your existing permissions; it can't do anything you can't already do yourself.
 
@@ -10,7 +10,7 @@ You'll sign in to ShiftControl once in your browser — the same login you use f
 
 ## Step 1 — Install the ShiftControl MCP server
 
-> Installing the plugin in Claude Code? Skip this step. Everything below is for setting the server up by hand.
+> Installing the Claude plugin? Skip this step. Everything below is for setting the server up by hand, which is what you need in every other tool.
 
 ### Claude Desktop (macOS / Windows / Linux)
 
@@ -37,7 +37,7 @@ Restart Claude Desktop. The first time you use a ShiftControl tool, a browser ta
 
 ### Claude.ai (web + mobile)
 
-In Claude on the web ([claude.ai](https://claude.ai)) or in the Claude mobile app:
+Installing the plugin is easier: it brings the connector with it, and you click **Connect** on its Connectors tab rather than filling this form in. To add it by hand anyway, in Claude on the web ([claude.ai](https://claude.ai)) or in the Claude mobile app:
 
 1. Open **Customize → Connectors**
 2. Click the **+ Add** button and select **Add custom connector**
@@ -157,7 +157,9 @@ Skills can then read your data freely while every write stays behind an explicit
 
 ### Claude Code, Claude desktop and claude.ai — the plugin (recommended)
 
-This repo is a Claude plugin marketplace, so one install gets you every skill in it, and updates arrive through the normal plugin update path. In Claude Code the plugin sets up the ShiftControl MCP server as well, so there is nothing else to install. You still sign in to ShiftControl in your browser the first time a skill reaches for your data; `/mcp` shows the connection and lets you approve it up front.
+This repo is a Claude plugin marketplace, so one install gets you every skill in it, and updates arrive through the normal plugin update path. The plugin brings the ShiftControl MCP server along with the skills, so there is no server URL to find or paste anywhere.
+
+In Claude Code the server is simply there once the plugin is installed; `/mcp` shows it and lets you sign in up front, and otherwise the browser opens the first time a skill reaches for your data. In the desktop app and on claude.ai the plugin lists ShiftControl under **Connectors** as **Not added**, and one click on **Connect** finishes it. That click is deliberate: the apps ask before letting a plugin reach an outside service.
 
 In **Claude Code**:
 
