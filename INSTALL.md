@@ -174,6 +174,10 @@ In the **Claude desktop app** or on **claude.ai**:
 2. In **Personal plugins**, click **+ → Add marketplace → Add from a repository**
 3. Enter `https://github.com/ShiftControl-io/skills`
 4. Install **ShiftControl**
+5. Open the plugin's **Connectors** tab. ShiftControl is listed there as **Not added**
+6. Click **Connect** and approve the ShiftControl sign-in in the browser tab that opens
+
+Step 5 is the one people miss. Installing the plugin puts the connector in front of you, but the app waits for you to say yes before it will reach ShiftControl, so a plugin that looks installed still answers nothing until you have clicked **Connect**.
 
 The skills then show up under **ShiftControl** when you type `/` or click **+** in a conversation. `/plugin update` (Claude Code) or the Plugins tab (desktop / web) pulls later releases.
 
@@ -272,6 +276,10 @@ Create a Custom GPT with the SKILL.md body as system instructions. Add the Shift
 
 - Cookies / popup blockers may interfere — try a different browser
 - If your AI assistant runs in a sandbox without browser access, you may need a different MCP client
+
+### "I installed the plugin but Claude can't reach ShiftControl"
+
+In the desktop app and on claude.ai, the plugin carries the connector but does not switch it on for you. Open **Customize → Plugins → ShiftControl → Connectors**; if `shiftcontrol` reads **Not added**, click **Connect** and approve the sign-in. In Claude Code there is no click: run `/mcp` and you should see `shiftcontrol` listed.
 
 ### "Authentication succeeded but tools don't appear"
 
