@@ -2,11 +2,15 @@
 
 ShiftControl uses the [Model Context Protocol (MCP)](https://modelcontextprotocol.io) — an open standard for connecting AI assistants to applications. To use any of the skills in this repo, you first install the **ShiftControl MCP server**, then install the skill(s) in whichever way your AI tool supports.
 
+**In Claude Code, one step does both.** The plugin carries the server definition, so installing the plugin installs the server too. Go straight to [Step 2](#step-2--install-a-skill) and come back here only if you use a different tool.
+
 You'll sign in to ShiftControl once in your browser — the same login you use for ShiftControl itself. After that, your AI assistant works with your actual ShiftControl data using your existing permissions; it can't do anything you can't already do yourself.
 
 ---
 
 ## Step 1 — Install the ShiftControl MCP server
+
+> Installing the plugin in Claude Code? Skip this step. Everything below is for setting the server up by hand.
 
 ### Claude Desktop (macOS / Windows / Linux)
 
@@ -44,6 +48,8 @@ In Claude on the web ([claude.ai](https://claude.ai)) or in the Claude mobile ap
 A browser tab opens for ShiftControl sign-in on first use. Approve once.
 
 ### Claude Code
+
+Only needed if you are not installing the plugin. The plugin in Step 2 brings the server with it, and adding it here as well leaves you with two copies of the same tools.
 
 ```bash
 claude mcp add shiftcontrol --transport http https://mcp.shiftcontrol.io/mcp
@@ -151,7 +157,7 @@ Skills can then read your data freely while every write stays behind an explicit
 
 ### Claude Code, Claude desktop and claude.ai — the plugin (recommended)
 
-This repo is a Claude plugin marketplace, so one install gets you every skill in it, and updates arrive through the normal plugin update path.
+This repo is a Claude plugin marketplace, so one install gets you every skill in it, and updates arrive through the normal plugin update path. In Claude Code the plugin sets up the ShiftControl MCP server as well, so there is nothing else to install. You still sign in to ShiftControl in your browser the first time a skill reaches for your data; `/mcp` shows the connection and lets you approve it up front.
 
 In **Claude Code**:
 
