@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "shiftcontrol",
   "displayName": "ShiftControl",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "description": "Run ShiftControl from your AI assistant: apps, groups, teams, people and subscription records, with every change proposed for your approval. Installs the ShiftControl MCP server for you.",
   "author": {
     "name": "ShiftControl",
