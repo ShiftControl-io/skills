@@ -46,6 +46,10 @@ Every skill in this repo follows three rules:
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). **Signed commits are required.**
 
+## Privacy
+
+The plugin connects your AI assistant to the ShiftControl MCP server at `mcp.shiftcontrol.io`, which works with your ShiftControl data under the [ShiftControl Privacy Policy](https://shiftcontrol.io/privacy-policy).
+
 ## License
 
 [Apache 2.0](LICENSE) — use, fork, modify, redistribute freely with attribution.

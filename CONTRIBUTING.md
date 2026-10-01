@@ -16,10 +16,12 @@ Set up signing once on your machine (SSH-based, easiest):
 
 ```bash
 git config --global gpg.format ssh
-git config --global user.signingkey ~/.ssh/id_ed25519.pub
+git config --global user.signingkey "<path to your public SSH key>"
 git config --global commit.gpgsign true
 git config --global tag.gpgsign true
 ```
+
+Replace `<path to your public SSH key>` with the `.pub` file of the SSH key you want to sign with.
 
 Then add the matching SSH key as a **Signing Key** on GitHub (Settings → SSH and GPG keys → New SSH key → select "Signing Key" as the type).
 
