@@ -14,6 +14,9 @@
   "license": "Apache-2.0",
   "icon": "./.claude-plugin/icon.png",
   "privacyPolicyUrl": "https://shiftcontrol.io/privacy-policy",
+  "termsOfServiceUrl": "https://shiftcontrol.io/terms-of-service",
+  "supportUrl": "https://github.com/ShiftControl-io/skills/issues/new/choose",
+  "documentationUrl": "https://github.com/ShiftControl-io/skills/blob/main/INSTALL.md",
   "keywords": [
     "shiftcontrol",
     "saas",
