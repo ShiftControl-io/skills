@@ -15,6 +15,14 @@
 2. **Install the skills** — in Claude, add this repo as a plugin marketplace and install **ShiftControl**. Everywhere else, `npx skills add ShiftControl-io/skills`. Zip downloads and copy-paste still work; [INSTALL.md](INSTALL.md) has every route.
 3. **Just ask.** *"Refresh my ShiftControl subscriptions from my recent invoices."* Your AI follows the skill, calls ShiftControl on your behalf, shows you what would change, and waits for your green light.
 
+## Example prompts
+
+- *"Show me the discovered apps nobody has reviewed yet, and dismiss the ones that are clearly personal tools."*
+- *"Suspend jamie@example.com's account at 6pm this Friday, and show me which apps and groups they're in."*
+- *"Refresh my ShiftControl subscription costs from my recent invoices."*
+
+Your AI shows you what it plans to change and waits for your approval before it writes anything.
+
 ## Available skills
 
 | Skill | What it does | Status |
