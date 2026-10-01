@@ -57,4 +57,5 @@ The plugin connects your AI assistant to the ShiftControl MCP server at `mcp.shi
 ## Support
 
 - Bug reports and skill requests: [open an issue](https://github.com/ShiftControl-io/skills/issues/new/choose)
+- Security issues: see [SECURITY.md](SECURITY.md)
 - Questions about ShiftControl: [support@shiftcontrol.io](mailto:support@shiftcontrol.io)
