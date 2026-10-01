@@ -77,16 +77,10 @@ jobs:
             echo "tag_exists=false" >> "$GITHUB_OUTPUT"
           fi
 
-      # Pinned and checksum-verified, same as the validate workflow.
-      - name: Install yq
+      # yq comes preinstalled on GitHub's ubuntu-latest runner image.
+      - name: Check yq
         if: steps.tag_check.outputs.skip == 'false'
-        env:
-          YQ_VERSION: v4.53.6
-          YQ_SHA256: c5f056448f973ae7d39b5401949648a78f2dc1947d6a8eb65be60d5c504b9385
-        run: |
-          wget -qO /tmp/yq "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64"
-          echo "${YQ_SHA256}  /tmp/yq" | sha256sum -c -
-          sudo install -m 0755 /tmp/yq /usr/local/bin/yq
+        run: yq --version
 
       - name: Build per-skill zip artifacts
         if: steps.tag_check.outputs.skip == 'false'

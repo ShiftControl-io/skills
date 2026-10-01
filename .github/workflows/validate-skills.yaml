@@ -21,16 +21,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Pinned and checksum-verified. The previous `latest` URL meant every run
-      # executed whatever upstream had published most recently, unverified.
-      - name: Install yq
-        env:
-          YQ_VERSION: v4.53.6
-          YQ_SHA256: c5f056448f973ae7d39b5401949648a78f2dc1947d6a8eb65be60d5c504b9385
-        run: |
-          wget -qO /tmp/yq "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64"
-          echo "${YQ_SHA256}  /tmp/yq" | sha256sum -c -
-          sudo install -m 0755 /tmp/yq /usr/local/bin/yq
+      # yq comes preinstalled on GitHub's ubuntu-latest runner image.
+      - name: Check yq
+        run: yq --version
 
       - name: Validate every SKILL.md
         env:
@@ -149,6 +142,13 @@ jobs:
           incomplete=$(jq '[.plugins[] | select((.name // "") == "" or .source == null or (.version // "") == "")] | length' "$mp")
           [ "$incomplete" -eq 0 ] || { echo "::error file=$mp::$incomplete plugin entries miss name, source or version"; fail=1; }
           [ -n "$(jq -r '.name // ""' "$pl")" ] || { echo "::error file=$pl::missing 'name'"; fail=1; }
+          # The plugin directory lists the plugin with this icon and links this policy.
+          icon=$(jq -r '.icon // ""' "$pl")
+          if [ -z "$icon" ] || ! file "$icon" | grep -q 'PNG image data'; then
+            echo "::error file=$pl::'icon' must point to a PNG in the plugin"
+            fail=1
+          fi
+          [ -n "$(jq -r '.privacyPolicyUrl // ""' "$pl")" ] || { echo "::error file=$pl::missing 'privacyPolicyUrl'"; fail=1; }
 
           # The repo is its own single plugin: the marketplace entry's source is
           # the repo root, so plugin.json and marketplace.json must agree with

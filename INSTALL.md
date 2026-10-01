@@ -14,11 +14,7 @@ You'll sign in to ShiftControl once in your browser — the same login you use f
 
 ### Claude Desktop (macOS / Windows / Linux)
 
-Edit your Claude Desktop config:
-
-- **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
-- **Linux:** `~/.config/Claude/claude_desktop_config.json`
+In Claude Desktop, open **Settings → Developer** and click **Edit Config** to open its configuration file.
 
 Add the `shiftcontrol` server inside `mcpServers`:
 

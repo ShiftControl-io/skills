@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "shiftcontrol",
   "displayName": "ShiftControl",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Run ShiftControl from your AI assistant: apps, groups, teams, people and subscription records, with every change proposed for your approval. Installs the ShiftControl MCP server for you.",
   "author": {
     "name": "ShiftControl",
@@ -12,6 +12,8 @@
   "homepage": "https://github.com/ShiftControl-io/skills",
   "repository": "https://github.com/ShiftControl-io/skills",
   "license": "Apache-2.0",
+  "icon": "./.claude-plugin/icon.png",
+  "privacyPolicyUrl": "https://shiftcontrol.io/privacy-policy",
   "keywords": [
     "shiftcontrol",
     "saas",
