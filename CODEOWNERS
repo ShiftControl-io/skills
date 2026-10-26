@@ -4,13 +4,13 @@
 # This file is enforced by GitHub branch protection on `main`.
 
 # Default — anything in the repo
-*       @shiftcontrol-dan
+*       @shiftcontrol-dan @shiftcontrol-krishna-nanduri
 
 # Skill content — same as default for now; expand as the team grows
-skills/  @shiftcontrol-dan
+skills/  @shiftcontrol-dan @shiftcontrol-krishna-nanduri
 
 # Repo tooling and governance
-.github/         @shiftcontrol-dan
-CONTRIBUTING.md  @shiftcontrol-dan
-CODEOWNERS       @shiftcontrol-dan
-LICENSE          @shiftcontrol-dan
+.github/         @shiftcontrol-dan @shiftcontrol-krishna-nanduri
+CONTRIBUTING.md  @shiftcontrol-dan @shiftcontrol-krishna-nanduri
+CODEOWNERS       @shiftcontrol-dan @shiftcontrol-krishna-nanduri
+LICENSE          @shiftcontrol-dan @shiftcontrol-krishna-nanduri
