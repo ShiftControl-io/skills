@@ -25,7 +25,7 @@ Splits the two directions into separate tools, so you never filter by type yours
 | `get_repeating_bills` | Repeating (template) bills, when the organisation uses them. |
 | `get_aged_payables` | Outstanding payables summarised by contact. |
 
-### Shape B — the self-hosted official server (`@xeroapi/xero-mcp-server`, run via npx)
+### Shape B — the [official self-hosted Xero server](https://github.com/XeroAPI/xero-mcp-server)
 
 Exposes one unified tool and expects you to constrain the type yourself. Relevant tools from its published surface: `list-invoices`, `list-contacts`, `list-credit-notes`, `list-payments`, `list-aged-payables-by-contact`, `list-organisation-details`.
 
@@ -150,7 +150,7 @@ If they want to connect, give them the instructions for **their** environment:
 | **Cline (VS Code)** | Settings → MCP Servers → add server `xero` with the same URL. |
 | **Continue.dev** | Add an entry under `experimental.modelContextProtocolServers` in `~/.continue/config.json` with `transport: {type: "http", url: "https://mcp.xero.com/mcp"}`. |
 | **ChatGPT** | MCP support varies by plan and is still rolling out. If unavailable, the delegated-collection path (`delegated-collection.md`) is the practical route — have someone with a Xero-capable client collect and hand back a file. |
-| **Any other MCP client** | Add a remote HTTP MCP server at `https://mcp.xero.com/mcp`; it authorises via OAuth in the browser. If the client only supports local servers, the official self-hosted alternative is `npx -y @xeroapi/xero-mcp-server@latest` with Xero Custom Connection credentials — Shape B above. |
+| **Any other MCP client** | Add a remote HTTP MCP server at `https://mcp.xero.com/mcp`; it authorises via OAuth in the browser. If the client only supports local servers, follow [Xero's self-hosted setup instructions](https://github.com/XeroAPI/xero-mcp-server) and use Xero Custom Connection credentials — Shape B above. |
 
 Two things to tell them regardless of environment: the connection is read-only for this skill's purposes (it never writes to Xero), and Xero authorises **per organisation** — if they run several entities, they need to pick the right one during OAuth, and the bills you see are only that entity's.
 

@@ -12,28 +12,9 @@ You'll sign in to ShiftControl once in your browser — the same login you use f
 
 > Installing the Claude plugin? Skip this step. Everything below is for setting the server up by hand, which is what you need in every other tool.
 
-### Claude Desktop (macOS / Windows / Linux)
+### Claude Desktop and claude.ai (web + mobile)
 
-In Claude Desktop, open **Settings → Developer** and click **Edit Config** to open its configuration file.
-
-Add the `shiftcontrol` server inside `mcpServers`:
-
-```json
-{
-  "mcpServers": {
-    "shiftcontrol": {
-      "command": "npx",
-      "args": ["mcp-remote", "https://mcp.shiftcontrol.io/mcp"]
-    }
-  }
-}
-```
-
-Restart Claude Desktop. The first time you use a ShiftControl tool, a browser tab opens for ShiftControl sign-in. Approve once.
-
-### Claude.ai (web + mobile)
-
-Installing the plugin is easier: it brings the connector with it, and you click **Connect** on its Connectors tab rather than filling this form in. To add it by hand anyway, in Claude on the web ([claude.ai](https://claude.ai)) or in the Claude mobile app:
+Installing the plugin is easier: it brings the connector with it, and you click **Connect** on its Connectors tab rather than filling this form in. To add it by hand, follow [Claude's custom connector guide](https://support.claude.com/en/articles/11175166-getting-started-with-custom-connectors-using-remote-mcp) or use these steps:
 
 1. Open **Customize → Connectors**
 2. Click the **+ Add** button and select **Add custom connector**
@@ -130,7 +111,7 @@ claude mcp add xero --transport http https://mcp.xero.com/mcp
 
 For Claude Desktop / claude.ai, add it as a custom connector (it also appears in the built-in connector directory on some plans). For Cursor, Windsurf, Cline and Continue.dev, add it as another MCP server with that URL. Authorise in the browser on first use — Xero authorises **per organisation**, so pick the right entity if you run several.
 
-Prefer to run it yourself? The official self-hosted server is `npx -y @xeroapi/xero-mcp-server@latest`, which uses Xero Custom Connection credentials instead of browser OAuth.
+Prefer to run it yourself? Follow [Xero's MCP server installation instructions](https://github.com/XeroAPI/xero-mcp-server). The self-hosted option uses Xero Custom Connection credentials instead of browser OAuth.
 
 ### Recommended permissions
 
@@ -189,17 +170,7 @@ The skill is available immediately in new conversations.
 
 ### Codex, Cursor, Copilot, Cline, Windsurf, OpenCode and 70+ others
 
-[`skills`](https://github.com/vercel-labs/skills) is a vendor-neutral installer. It reads this repo and writes each skill into whatever directory your agent expects (`.agents/skills/`, `.claude/skills/`, and so on).
-
-```bash
-# Into the current project
-npx skills add ShiftControl-io/skills
-
-# Or user-wide, for every project
-npx skills add ShiftControl-io/skills --global
-```
-
-Useful flags: `--list` shows what the repo holds without installing anything, `--skill <name>` takes one skill, and `--agent <agent>` targets a single tool instead of every agent it detects.
+Follow the [vendor-neutral skills installer's instructions](https://github.com/vercel-labs/skills) and use `ShiftControl-io/skills` as the source repository. The installer puts the skills in the directory your agent expects, for the current project or for your user account.
 
 ### Gemini CLI and Antigravity
 
@@ -265,7 +236,6 @@ Create a Custom GPT with the SKILL.md body as system instructions. Add the Shift
 ### "Could not connect to MCP server"
 
 - Confirm the URL is `https://mcp.shiftcontrol.io/mcp` (note: `.io`, `https://`, ends in `/mcp`)
-- If using `npx mcp-remote`, ensure Node 20+ is installed
 - Open `https://mcp.shiftcontrol.io/.well-known/oauth-authorization-server` in a browser — it should return JSON
 
 ### "OAuth flow doesn't complete"
