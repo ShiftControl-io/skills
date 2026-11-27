@@ -11,7 +11,7 @@
     {
       "name": "shiftcontrol",
       "displayName": "ShiftControl",
-      "source": "./plugins/shiftcontrol",
+      "source": "./",
       "description": "Run ShiftControl from your AI assistant: apps, groups, teams, people and subscription records, with every change proposed for your approval. Installs the ShiftControl MCP server for you.",
       "version": "0.6.4",
       "author": {

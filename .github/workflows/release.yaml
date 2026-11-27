@@ -1,6 +1,6 @@
-name: Release on VERSION bump
+name: Release on plugin version bump
 
-# Auto-tag and auto-release whenever the top-level VERSION file changes on main.
+# Auto-tag and auto-release new plugin versions on main.
 # The workflow imports a GPG signing key (so the tag is signed, matching the
 # CONTRIBUTING.md signed-commit policy) and attaches per-skill zip artifacts to
 # the GitHub release for claude.ai users who can't install skills from a git URL.
@@ -9,7 +9,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'VERSION'
+      - '.claude-plugin/plugin.json'
   workflow_dispatch:
 
 permissions:
@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   release:
-    name: Tag + release if VERSION bumped
+    name: Tag + release if plugin version bumped
     runs-on: ubuntu-latest
     steps:
       - name: Checkout (full history for tag lookup)
@@ -25,25 +25,21 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Read VERSION
+      - name: Read plugin version
         id: version
         env:
           # Same POSIX-ERE SemVer pattern validate-skills.yaml uses, so a
           # version that passes the PR gate cannot fail the release.
           SEMVER: '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-((0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*))?(\+([0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*))?$'
         run: |
-          VERSION=$(cat VERSION | tr -d '[:space:]')
-          if [ -z "$VERSION" ]; then
-            echo "::error::VERSION file is empty"
+          version=$(jq -r '.version // ""' .claude-plugin/plugin.json)
+          if [[ ! $version =~ $SEMVER ]]; then
+            echo "::error file=.claude-plugin/plugin.json::version '$version' is not valid SemVer"
             exit 1
           fi
-          if ! echo "$VERSION" | grep -qE "$SEMVER"; then
-            echo "::error::VERSION '$VERSION' is not valid SemVer"
-            exit 1
-          fi
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
-          echo "VERSION: $VERSION"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+          echo "Plugin version: $version"
 
       # The RELEASE is the completion marker, not the tag. A run that dies
       # between pushing the tag and creating the release used to be
@@ -66,9 +62,9 @@ jobs:
             # holds now: a retry can run long after later skill merges landed,
             # and a zip must match the tag it ships under.
             git -c advice.detachedHead=false checkout --detach "$TAG"
-            tagged_version=$(tr -d '[:space:]' < VERSION)
+            tagged_version=$(jq -r '.version // ""' .claude-plugin/plugin.json)
             if [ "$tagged_version" != "${{ steps.version.outputs.version }}" ]; then
-              echo "::error::$TAG holds VERSION '$tagged_version', expected '${{ steps.version.outputs.version }}'"
+              echo "::error::$TAG holds plugin version '$tagged_version', expected '${{ steps.version.outputs.version }}'"
               exit 1
             fi
             echo "Tag $TAG already exists at $(git rev-parse --short HEAD); reusing it and building from it."
@@ -87,8 +83,8 @@ jobs:
         id: zips
         run: |
           mkdir -p /tmp/skill-zips
-          VERSION="${{ steps.version.outputs.version }}"
-          for dir in plugins/shiftcontrol/skills/*/; do
+          plugin_version="${{ steps.version.outputs.version }}"
+          for dir in skills/*/; do
             name=$(basename "$dir")
             # Each zip is named for the SKILL's own version, not the repo's, so
             # a downloaded file says what it holds. validate-skills.yaml is what
@@ -96,10 +92,10 @@ jobs:
             fm=$(awk '/^---$/{c++; if(c==2) exit; next} c==1' "${dir}SKILL.md")
             skill_version=$(echo "$fm" | yq -r '.metadata.version // ""')
             if [ -z "$skill_version" ]; then
-              echo "::error::${name} has no metadata.version; falling back to repo VERSION $VERSION"
-              skill_version="$VERSION"
+              echo "::error::${name} has no metadata.version; falling back to plugin version $plugin_version"
+              skill_version="$plugin_version"
             fi
-            ( cd plugins/shiftcontrol/skills && zip -r "/tmp/skill-zips/${name}-v${skill_version}.zip" "$name" -x '*.DS_Store' )
+            ( cd skills && zip -r "/tmp/skill-zips/${name}-v${skill_version}.zip" "$name" -x '*.DS_Store' )
             echo "✓ Built ${name}-v${skill_version}.zip"
           done
           ls -la /tmp/skill-zips
