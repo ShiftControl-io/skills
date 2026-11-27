@@ -49,21 +49,19 @@ Nothing needs adding to `.claude-plugin/`. The repo is published as a single Cla
 
 Same flow. Bump `metadata.version` in the skill's own frontmatter when behavior changes meaningfully (new MCP tool dependency, new workflow step, breaking change to the proposal format), and update the version in the README catalog table to match. Versions follow [SemVer](https://semver.org), and CI fails the PR if the two disagree.
 
-Each skill versions independently of the repo. `metadata.version` says what the skill does; the top-level `VERSION` coordinates releases. A skill bump with no `VERSION` bump lands on `main` without cutting a release, which is fine while you are iterating and is why the release is a deliberate second step.
+Each skill versions independently of the plugin. `metadata.version` says what the skill does; the version in `.claude-plugin/plugin.json` coordinates releases. A skill bump without a plugin version bump lands on `main` without cutting a release.
 
 ## Release process
 
 - Merged PRs land on `main`.
-- The top-level `VERSION` file is the source of truth (single SemVer line, e.g. `0.1.0`).
-- To cut a release: open a PR that bumps `VERSION`. On merge, `.github/workflows/release.yaml` automatically:
+- To cut a release: open a PR that bumps `version` in `.claude-plugin/plugin.json` and in the plugin entry in `.claude-plugin/marketplace.json`. CI checks that the two match in the same PR. On merge, `.github/workflows/release.yaml` automatically:
   1. Imports a CI signing GPG key
-  2. Creates a signed tag `v<VERSION>`
+  2. Creates a signed tag for the plugin version
   3. Pushes the tag
   4. Builds per-skill zip artifacts, one zip per `skills/<name>/` folder, each named for that skill's own `metadata.version` rather than the repo version, so a downloaded file says what it holds
   5. Creates a GitHub release with auto-generated notes from the commit history and attaches the zips
-- Tags are `vMAJOR.MINOR.PATCH` (`v0.1.0`, `v0.2.0`, etc.) per [SemVer](https://semver.org). Per-skill versions live in SKILL.md frontmatter; repo-level `VERSION` is the release coordinator and the version the Claude plugin advertises.
-- The release workflow only fires when `VERSION` itself changes — skill edits without a version bump land on `main` without producing a release. Bump `VERSION` deliberately.
-- A `VERSION` bump also bumps `version` in `.claude-plugin/plugin.json` and in the plugin entry in `.claude-plugin/marketplace.json`, in the same PR. Claude Code treats the marketplace entry's `version` as a pin: leave it behind and installed plugins never see the new release. `validate-skills.yaml` fails the PR if the three disagree.
+- Tags are `vMAJOR.MINOR.PATCH` (`v0.1.0`, `v0.2.0`, etc.) per [SemVer](https://semver.org). Per-skill versions live in SKILL.md frontmatter.
+- The release workflow checks for a release when `plugin.json` changes and skips versions that already have one. Claude Code uses the marketplace entry's version to detect updates.
 
 ## Code of conduct
 

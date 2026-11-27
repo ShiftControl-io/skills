@@ -12,5 +12,5 @@ skills/  @shiftcontrol-dan @shiftcontrol-krishna-nanduri
 # Repo tooling and governance
 .github/         @shiftcontrol-dan @shiftcontrol-krishna-nanduri
 CONTRIBUTING.md  @shiftcontrol-dan @shiftcontrol-krishna-nanduri
-CODEOWNERS       @shiftcontrol-dan @shiftcontrol-krishna-nanduri
+/.github/CODEOWNERS  @shiftcontrol-dan @shiftcontrol-krishna-nanduri
 LICENSE          @shiftcontrol-dan @shiftcontrol-krishna-nanduri

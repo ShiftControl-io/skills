@@ -12,12 +12,16 @@ on:
     paths:
       - 'skills/**'
       - '.claude-plugin/**'
-      - 'VERSION'
       - '.github/workflows/validate-skills.yaml'
 
 jobs:
   validate:
     runs-on: ubuntu-latest
+    env:
+      # The published SemVer pattern, translated to POSIX ERE: no (?:) and
+      # no \d. Rejects leading zeros and empty prerelease identifiers,
+      # accepts hyphens inside prerelease and +build metadata.
+      SEMVER: '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-((0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*))?(\+([0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*))?$'
     steps:
       - uses: actions/checkout@v4
 
@@ -26,11 +30,6 @@ jobs:
         run: yq --version
 
       - name: Validate every SKILL.md
-        env:
-          # The published SemVer pattern, translated to POSIX ERE: no (?:) and
-          # no \d. Rejects leading zeros and empty prerelease identifiers,
-          # accepts hyphens inside prerelease and +build metadata.
-          SEMVER: '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-((0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*))?(\+([0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*))?$'
         run: |
           set -e
           fail=0
@@ -121,7 +120,6 @@ jobs:
         run: |
           set -e
           fail=0
-          version=$(tr -d '[:space:]' < VERSION)
           mp=.claude-plugin/marketplace.json
           pl=.claude-plugin/plugin.json
 
@@ -150,9 +148,8 @@ jobs:
           fi
           [ -n "$(jq -r '.privacyPolicyUrl // ""' "$pl")" ] || { echo "::error file=$pl::missing 'privacyPolicyUrl'"; fail=1; }
 
-          # The repo is its own single plugin: the marketplace entry's source is
-          # the repo root, so plugin.json and marketplace.json must agree with
-          # each other and with VERSION, or installs pin a stale release.
+          # The repo is its own single plugin: the marketplace entry must point
+          # to the repo root and match plugin.json, or installs pin a stale release.
           plugin_name=$(jq -r '.name' "$pl")
           entry_name=$(jq -r '.plugins[0].name' "$mp")
           if [ "$plugin_name" != "$entry_name" ]; then
@@ -166,15 +163,16 @@ jobs:
             fail=1
           fi
 
-          for pair in "plugin.json:$(jq -r '.version' "$pl")" \
-                      "marketplace.json:$(jq -r '.plugins[0].version' "$mp")"; do
-            file=${pair%%:*}
-            got=${pair#*:}
-            if [ "$got" != "$version" ]; then
-              echo "::error::$file version '$got' does not match VERSION '$version' — bump both in the same PR"
-              fail=1
-            fi
-          done
+          version=$(jq -r '.version // ""' "$pl")
+          if [[ ! $version =~ $SEMVER ]]; then
+            echo "::error file=$pl::version '$version' is not valid SemVer"
+            fail=1
+          fi
+          entry_version=$(jq -r '.plugins[0].version // ""' "$mp")
+          if [ "$entry_version" != "$version" ]; then
+            echo "::error file=$mp::version '$entry_version' does not match plugin.json version '$version' — bump both in the same PR"
+            fail=1
+          fi
 
           # Every skill directory must sit where the plugin loader looks for it.
           for dir in skills/*/; do
