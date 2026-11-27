@@ -205,7 +205,7 @@ Useful flags: `--list` shows what the repo holds without installing anything, `-
 
 ```bash
 gemini skills install https://github.com/ShiftControl-io/skills.git \
-  --path skills/refresh-subscription-info --consent
+  --path plugins/shiftcontrol/skills/refresh-subscription-info --consent
 ```
 
 `--scope workspace` keeps it to the current project; the default is your user scope.
@@ -217,8 +217,8 @@ gemini skills install https://github.com/ShiftControl-io/skills.git \
 ```bash
 mkdir -p .agents/skills
 git clone --depth 1 --filter=blob:none --sparse https://github.com/ShiftControl-io/skills.git _tmp
-cd _tmp && git sparse-checkout set skills/refresh-subscription-info && cd ..
-mv _tmp/skills/refresh-subscription-info .agents/skills/
+cd _tmp && git sparse-checkout set plugins/shiftcontrol/skills/refresh-subscription-info && cd ..
+mv _tmp/plugins/shiftcontrol/skills/refresh-subscription-info .agents/skills/
 rm -rf _tmp
 ```
 
@@ -235,8 +235,8 @@ mkdir -p ~/.claude/skills
 # Sparse-clone just the skill you want
 cd ~/.claude/skills
 git clone --depth 1 --filter=blob:none --sparse https://github.com/ShiftControl-io/skills.git _tmp
-cd _tmp && git sparse-checkout set skills/refresh-subscription-info
-mv skills/refresh-subscription-info ../
+cd _tmp && git sparse-checkout set plugins/shiftcontrol/skills/refresh-subscription-info
+mv plugins/shiftcontrol/skills/refresh-subscription-info ../
 cd .. && rm -rf _tmp
 ```
 

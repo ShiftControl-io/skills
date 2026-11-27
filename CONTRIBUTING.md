@@ -37,13 +37,13 @@ Other signing options (GPG, S/MIME) work too. See [GitHub's signing guide](https
 ## Adding a new skill
 
 1. Pick a name — lowercase, hyphens, ≤64 chars, no `anthropic` / `claude` reserved words.
-2. Create `skills/<name>/SKILL.md` with YAML frontmatter: `name`, `description` (≤200 chars), and `metadata.version` (start at `"0.1.0"`, quoted so YAML keeps it a string).
-3. Optional supporting files under `skills/<name>/references/`.
+2. Create `plugins/shiftcontrol/skills/<name>/SKILL.md` with YAML frontmatter: `name`, `description` (≤200 chars), and `metadata.version` (start at `"0.1.0"`, quoted so YAML keeps it a string).
+3. Optional supporting files under `plugins/shiftcontrol/skills/<name>/references/`.
 4. Add an entry to the table in [README.md](README.md).
 5. If your skill needs new MCP tools that don't exist yet on `mcp.shiftcontrol.io`, file an issue (or a PR on the MCP server) first.
 6. Open a PR. CI validates frontmatter and signed commits. A CODEOWNER reviews.
 
-Nothing needs adding to `.claude-plugin/`. The repo is published as a single Claude plugin whose root is the repo root, so every folder under `skills/` is picked up automatically.
+Nothing needs adding to a manifest for a new skill. Claude loads every skill under `plugins/shiftcontrol/skills/` automatically. For Claude's plugin directory, submit `plugins/shiftcontrol` as the plugin path. Keep repository tooling outside that folder.
 
 ## Editing an existing skill
 
@@ -59,11 +59,11 @@ Each skill versions independently of the repo. `metadata.version` says what the 
   1. Imports a CI signing GPG key
   2. Creates a signed tag `v<VERSION>`
   3. Pushes the tag
-  4. Builds per-skill zip artifacts, one zip per `skills/<name>/` folder, each named for that skill's own `metadata.version` rather than the repo version, so a downloaded file says what it holds
+  4. Builds per-skill zip artifacts, one zip per `plugins/shiftcontrol/skills/<name>/` folder, each named for that skill's own `metadata.version` rather than the repo version, so a downloaded file says what it holds
   5. Creates a GitHub release with auto-generated notes from the commit history and attaches the zips
 - Tags are `vMAJOR.MINOR.PATCH` (`v0.1.0`, `v0.2.0`, etc.) per [SemVer](https://semver.org). Per-skill versions live in SKILL.md frontmatter; repo-level `VERSION` is the release coordinator and the version the Claude plugin advertises.
 - The release workflow only fires when `VERSION` itself changes — skill edits without a version bump land on `main` without producing a release. Bump `VERSION` deliberately.
-- A `VERSION` bump also bumps `version` in `.claude-plugin/plugin.json` and in the plugin entry in `.claude-plugin/marketplace.json`, in the same PR. Claude Code treats the marketplace entry's `version` as a pin: leave it behind and installed plugins never see the new release. `validate-skills.yaml` fails the PR if the three disagree.
+- A `VERSION` bump also bumps `version` in `plugins/shiftcontrol/.claude-plugin/plugin.json` and in the plugin entry in `.claude-plugin/marketplace.json`, in the same PR. Claude Code treats the marketplace entry's `version` as a pin: leave it behind and installed plugins never see the new release. `validate-skills.yaml` fails the PR if the three disagree.
 
 ## Code of conduct
 

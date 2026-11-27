@@ -7,7 +7,7 @@
 *       @shiftcontrol-dan @shiftcontrol-krishna-nanduri
 
 # Skill content — same as default for now; expand as the team grows
-skills/  @shiftcontrol-dan @shiftcontrol-krishna-nanduri
+plugins/shiftcontrol/skills/  @shiftcontrol-dan @shiftcontrol-krishna-nanduri
 
 # Repo tooling and governance
 .github/         @shiftcontrol-dan @shiftcontrol-krishna-nanduri

@@ -27,7 +27,7 @@ Your AI shows you what it plans to change and waits for your approval before it 
 
 | Skill | What it does | Status |
 |---|---|---|
-| [`refresh-subscription-info`](skills/refresh-subscription-info/) | Finds SaaS invoices — in email, in Xero bills, or in a file a colleague collected — and proposes ShiftControl subscription updates (cost, billing frequency, contract terms, notes). | v0.3.0 |
+| [`refresh-subscription-info`](plugins/shiftcontrol/skills/refresh-subscription-info/) | Finds SaaS invoices — in email, in Xero bills, or in a file a colleague collected — and proposes ShiftControl subscription updates (cost, billing frequency, contract terms, notes). | v0.3.0 |
 
 More coming. See [open skill proposals](https://github.com/ShiftControl-io/skills/issues?q=label%3Askill-request).
 

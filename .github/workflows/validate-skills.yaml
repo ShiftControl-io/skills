@@ -10,7 +10,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'skills/**'
+      - 'plugins/shiftcontrol/**'
       - '.claude-plugin/**'
       - 'VERSION'
       - '.github/workflows/validate-skills.yaml'
@@ -34,7 +34,7 @@ jobs:
         run: |
           set -e
           fail=0
-          for f in skills/*/SKILL.md; do
+          for f in plugins/shiftcontrol/skills/*/SKILL.md; do
             echo "::group::Validating $f"
             before=$fail
 
@@ -101,7 +101,7 @@ jobs:
               # Compare the catalog's status cell exactly. A grep for
               # "v$skill_version" would treat the dots as wildcards and match on
               # a prefix, so v0.3.00 and v0x3x0 would both pass for 0.3.0.
-              row=$(grep -F "skills/$name/" README.md | head -1)
+              row=$(grep -F "plugins/shiftcontrol/skills/$name/" README.md | head -1)
               status=$(echo "$row" | awk -F'|' 'NF>1 {cell=$(NF-1); gsub(/^[[:space:]]+|[[:space:]]+$/, "", cell); print cell}')
               if [ -z "$row" ]; then
                 echo "::error::README.md has no catalog row for '$name'"
@@ -123,7 +123,8 @@ jobs:
           fail=0
           version=$(tr -d '[:space:]' < VERSION)
           mp=.claude-plugin/marketplace.json
-          pl=.claude-plugin/plugin.json
+          plugin_dir=plugins/shiftcontrol
+          pl=$plugin_dir/.claude-plugin/plugin.json
 
           for f in "$mp" "$pl"; do
             if ! jq empty "$f" 2>/dev/null; then
@@ -144,15 +145,14 @@ jobs:
           [ -n "$(jq -r '.name // ""' "$pl")" ] || { echo "::error file=$pl::missing 'name'"; fail=1; }
           # The plugin directory lists the plugin with this icon and links this policy.
           icon=$(jq -r '.icon // ""' "$pl")
-          if [ -z "$icon" ] || ! file "$icon" | grep -q 'PNG image data'; then
+          if [ -z "$icon" ] || ! file "$plugin_dir/$icon" | grep -q 'PNG image data'; then
             echo "::error file=$pl::'icon' must point to a PNG in the plugin"
             fail=1
           fi
           [ -n "$(jq -r '.privacyPolicyUrl // ""' "$pl")" ] || { echo "::error file=$pl::missing 'privacyPolicyUrl'"; fail=1; }
 
-          # The repo is its own single plugin: the marketplace entry's source is
-          # the repo root, so plugin.json and marketplace.json must agree with
-          # each other and with VERSION, or installs pin a stale release.
+          # The marketplace must point to the submitted plugin folder and match
+          # its name and version, or installs can miss the release.
           plugin_name=$(jq -r '.name' "$pl")
           entry_name=$(jq -r '.plugins[0].name' "$mp")
           if [ "$plugin_name" != "$entry_name" ]; then
@@ -161,8 +161,8 @@ jobs:
           fi
 
           entry_source=$(jq -r '.plugins[0].source' "$mp")
-          if [ "$entry_source" != "./" ]; then
-            echo "::error file=$mp::plugin source is '$entry_source'; this repo publishes itself, so it must be './'"
+          if [ "$entry_source" != "./$plugin_dir" ]; then
+            echo "::error file=$mp::plugin source is '$entry_source'; expected './$plugin_dir'"
             fail=1
           fi
 
@@ -177,7 +177,7 @@ jobs:
           done
 
           # Every skill directory must sit where the plugin loader looks for it.
-          for dir in skills/*/; do
+          for dir in "$plugin_dir"/skills/*/; do
             [ -f "${dir}SKILL.md" ] || { echo "::error::${dir} has no SKILL.md"; fail=1; }
           done
 

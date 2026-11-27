@@ -88,7 +88,7 @@ jobs:
         run: |
           mkdir -p /tmp/skill-zips
           VERSION="${{ steps.version.outputs.version }}"
-          for dir in skills/*/; do
+          for dir in plugins/shiftcontrol/skills/*/; do
             name=$(basename "$dir")
             # Each zip is named for the SKILL's own version, not the repo's, so
             # a downloaded file says what it holds. validate-skills.yaml is what
@@ -99,7 +99,7 @@ jobs:
               echo "::error::${name} has no metadata.version; falling back to repo VERSION $VERSION"
               skill_version="$VERSION"
             fi
-            ( cd skills && zip -r "/tmp/skill-zips/${name}-v${skill_version}.zip" "$name" -x '*.DS_Store' )
+            ( cd plugins/shiftcontrol/skills && zip -r "/tmp/skill-zips/${name}-v${skill_version}.zip" "$name" -x '*.DS_Store' )
             echo "✓ Built ${name}-v${skill_version}.zip"
           done
           ls -la /tmp/skill-zips

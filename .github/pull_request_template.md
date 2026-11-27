@@ -14,7 +14,7 @@
 
 - [ ] My commits are signed (verified by GitHub — see `git log --show-signature`)
 - [ ] I followed [CONTRIBUTING.md](../CONTRIBUTING.md)
-- [ ] My skill (if any) is in `skills/<name>/` with a valid `SKILL.md` (≤200 char description, no reserved words)
+- [ ] My skill (if any) is in `plugins/shiftcontrol/skills/<name>/` with a valid `SKILL.md` (≤200 char description, no reserved words)
 - [ ] My skill proposes changes before any MCP write
 - [ ] My skill never auto-confirms writes
 - [ ] If my skill uses MCP tools, those tools exist on `mcp.shiftcontrol.io` already
