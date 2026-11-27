@@ -41,7 +41,7 @@ Other signing options (GPG, S/MIME) work too. See [GitHub's signing guide](https
 3. Optional supporting files under `skills/<name>/references/`.
 4. Add an entry to the table in [README.md](README.md).
 5. If your skill needs new MCP tools that don't exist yet on `mcp.shiftcontrol.io`, file an issue (or a PR on the MCP server) first.
-6. Open a PR. CI validates frontmatter and signed commits.
+6. Open a PR. CI validates frontmatter and signed commits. A CODEOWNER reviews.
 
 Nothing needs adding to `.claude-plugin/`. The repo is published as a single Claude plugin whose root is the repo root, so every folder under `skills/` is picked up automatically.
 
