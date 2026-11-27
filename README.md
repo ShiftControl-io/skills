@@ -12,7 +12,7 @@
 ## Quick start
 
 1. **Connect your AI to ShiftControl** — one-time MCP server install. The Claude plugin in step 2 brings the server with it, so in Claude you can skip straight there and just approve the connection. [INSTALL.md](INSTALL.md) has step-by-step for every other AI tool.
-2. **Install the skills** — in Claude, add this repo as a plugin marketplace and install **ShiftControl**. Everywhere else, `npx skills add ShiftControl-io/skills`. Zip downloads and copy-paste still work; [INSTALL.md](INSTALL.md) has every route.
+2. **Install the skills** — in Claude, add this repo as a plugin marketplace and install **ShiftControl**. For other tools, use the vendor-neutral installer, a skill zip, or copy and paste. See [INSTALL.md](INSTALL.md) for each option.
 3. **Just ask.** *"Refresh my ShiftControl subscriptions from my recent invoices."* Your AI follows the skill, calls ShiftControl on your behalf, shows you what would change, and waits for your green light.
 
 ## Example prompts
@@ -38,17 +38,28 @@ More coming. See [open skill proposals](https://github.com/ShiftControl-io/skill
 Distribution is the part every vendor still does its own way, so this repo carries all of them at once:
 
 - **Claude plugin marketplace** — `.claude-plugin/marketplace.json` makes the repo installable as one plugin in Claude Code, the Claude desktop app and claude.ai. The plugin also declares the ShiftControl MCP server, so the skills and the connection they need arrive together
-- **Vendor-neutral installer** — `npx skills add ShiftControl-io/skills` writes the skills into whichever directory your agent uses
+- **Vendor-neutral installer** — the [skills installer](https://github.com/vercel-labs/skills) writes the skills into whichever directory your agent uses
 - **Git and `.agents/skills/`** — clone a skill folder straight into a repo for Devin, Codex or Gemini CLI
 - **Zip per skill** — attached to every [release](https://github.com/ShiftControl-io/skills/releases/latest) for drag-and-drop upload
 
-[INSTALL.md](INSTALL.md) has the exact command for each.
+[INSTALL.md](INSTALL.md) has setup instructions for each.
 
 Every skill in this repo follows three rules:
 
 - **Assumes the ShiftControl MCP server is installed and authenticated** — see INSTALL.md
 - **Proposes changes for human approval before any write** — no silent mutations
 - **Records a short note on each change** — so the next person to look at the app's record can see where the updated values came from
+
+## What the ShiftControl connector can do
+
+The plugin connects to the full ShiftControl MCP server, not just the tools the invoice skill uses. The tools that can make changes use your existing permissions. Claude asks you to approve the specific action before making a change.
+
+- **Send emails and push requests.** Send directory account activation instructions or password reset emails, and send a verification request to someone's registered push device. Enabling an account that has never been activated can also send an activation email.
+- **Post and act on work items.** Create work items, post comments to them, update their status, and approve, deny or cancel them. Denying or canceling an item can also cancel its pending child items.
+- **Change access to apps and groups.** Grant or remove app access, archive or restore apps, change ShiftControl roles, and change group membership, nested groups, rules and settings that control who can join, post or see members. People can request or give up their own app or group access through their organization's approval process. Tools can also revoke the signed-in person's Google app authorization or block, unblock, pause or resume blocks on third-party Google apps for the whole organization.
+- **Change account access.** Create directory accounts, change sign-in addresses, suspend, restore or unlock accounts, cancel scheduled account changes, sign people out of active sessions, and require a password change.
+- **Delete records and accounts.** Permanently delete apps and their assignments and cost records, groups in connected directories, or directory accounts and their associated data, including Google Workspace mail and files. Delete group tags, or delete teams, departments and locations and optionally their directory groups.
+- **Update subscription records.** Record costs, billing frequency and contract terms. The connector does not make payments.
 
 ## Contributing
 
